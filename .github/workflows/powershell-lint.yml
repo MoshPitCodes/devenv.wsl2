@@ -25,7 +25,7 @@ jobs:
           $results = @()
           Get-ChildItem -Path powershell -Filter *.ps1 -Recurse | ForEach-Object {
             Write-Host "Analyzing $($_.FullName)..."
-            $analysis = Invoke-ScriptAnalyzer -Path $_.FullName -Severity Error,Warning
+            $analysis = Invoke-ScriptAnalyzer -Path $_.FullName -Settings PSScriptAnalyzerSettings.psd1
             if ($analysis) {
               $results += $analysis
               $analysis | Format-Table -AutoSize
