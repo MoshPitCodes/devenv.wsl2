@@ -5,6 +5,9 @@
     },
     {
       "pattern": "^https://localhost"
+    },
+    {
+      "pattern": "^ansible/"
     }
   ],
   "timeout": "20s",
