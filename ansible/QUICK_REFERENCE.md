@@ -63,6 +63,7 @@ talosctl_version: "1.9.2"
 ## Quick Commands
 
 ### SSH Keys
+
 ```bash
 # List loaded SSH keys
 ssh-add -l
@@ -75,6 +76,7 @@ ssh -T git@github.com
 ```
 
 ### GPG Keys
+
 ```bash
 # List GPG keys
 gpg --list-secret-keys
@@ -87,6 +89,7 @@ echo "test" | gpg --clearsign
 ```
 
 ### Kubernetes Tools
+
 ```bash
 # Check versions
 kubectl version --client
@@ -101,6 +104,7 @@ kubectl get <TAB><TAB>
 ```
 
 ### Doppler
+
 ```bash
 # Login to Doppler
 doppler login
@@ -110,6 +114,7 @@ doppler setup
 ```
 
 ### Docker
+
 ```bash
 # Start Docker
 sudo service docker start

@@ -60,3 +60,4 @@ vault-password.txt
 ansible/vars/user_environment.yml
 ansible/ansible.cfg
 docs
+CLAUDE.md

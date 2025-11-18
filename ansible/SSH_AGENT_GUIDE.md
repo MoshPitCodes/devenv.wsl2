@@ -14,6 +14,7 @@ This Ansible setup automatically configures SSH agent to start and load your SSH
 ### 1. SSH Agent Auto-Start
 
 When you open a new bash shell, the configuration:
+
 1. Checks if an SSH agent is already running
 2. If running, connects to the existing agent
 3. If not running, starts a new agent and saves the connection details
@@ -23,33 +24,39 @@ The agent information is stored in `~/.ssh/agent-environment` and persists acros
 ### 2. Automatic Key Loading
 
 On shell startup, if no keys are loaded:
-1. Scans `~/.ssh/` for private keys (id_*, *_rsa, *_ed25519)
+
+1. Scans `~/.ssh/` for private keys (`id_*`, `*_rsa`, `*_ed25519`)
 2. Adds each key to the ssh-agent
 3. Displays which keys were loaded
 
 ## Manual Commands
 
 ### List Currently Loaded Keys
+
 ```bash
 ssh-add -l
 ```
 
 ### Manually Load Keys
+
 ```bash
 ~/.ssh/load-keys.sh
 ```
 
 ### Add a Specific Key
+
 ```bash
 ssh-add ~/.ssh/id_ed25519
 ```
 
 ### Remove All Keys
+
 ```bash
 ssh-add -D
 ```
 
 ### Remove a Specific Key
+
 ```bash
 ssh-add -d ~/.ssh/id_ed25519
 ```
@@ -71,16 +78,19 @@ ssh_agent_autoload_keys: true
 ### Keys Not Loading Automatically
 
 1. Check if ssh-agent is running:
+
    ```bash
    echo $SSH_AUTH_SOCK
    ```
 
 2. Reload your shell:
+
    ```bash
    source ~/.bashrc
    ```
 
 3. Manually load keys:
+
    ```bash
    ~/.ssh/load-keys.sh
    ```
@@ -122,11 +132,13 @@ source ~/.bashrc
 ## Password-Protected Keys
 
 If your SSH keys are password-protected:
+
 - You'll be prompted for the password when keys are loaded
 - Consider using `ssh-add -t <seconds>` for time-limited key loading
 - Or use `ssh-add -c` for confirmation before each use
 
 Example:
+
 ```bash
 # Add key for 8 hours (28800 seconds)
 ssh-add -t 28800 ~/.ssh/id_ed25519_github
@@ -135,6 +147,7 @@ ssh-add -t 28800 ~/.ssh/id_ed25519_github
 ## Integration with Other Tools
 
 The ssh-agent works seamlessly with:
+
 - Git operations
 - SSH connections
 - SCP/RSYNC file transfers

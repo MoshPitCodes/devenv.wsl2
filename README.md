@@ -1,37 +1,37 @@
 <!-- DO NOT TOUCH THIS SECTION#1: START -->
 <h1 align="center">
-   <img src="./.github/assets/logo/wsl2-devenv-logo.svg" width="200px" />
+   <img src="./.github/assets/logo/wsl2-devenv-logo.svg" alt="WSL2 DevEnv Logo" width="200px" />
    <br>
       WSL2 DevEnv | Complete WSL2 Development Environment Automation
    <br>
-      <img src="./.github/assets/pallet/pallet-0.png" width="800px" /> <br>
+      <img src="./.github/assets/pallet/pallet-0.png" alt="Project Banner" width="800px" /> <br>
 
    <div align="center">
       <p></p>
       <div align="center">
          <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/stargazers">
-            <img src="https://img.shields.io/github/stars/MoshPitCodes/moshpitcodes.wsl?color=FABD2F&labelColor=282828&style=for-the-badge&logo=starship&logoColor=FABD2F">
+            <img src="https://img.shields.io/github/stars/MoshPitCodes/moshpitcodes.wsl?color=FABD2F&labelColor=282828&style=for-the-badge&logo=starship&logoColor=FABD2F" alt="GitHub Stars">
          </a>
          <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/">
-            <img src="https://img.shields.io/github/repo-size/MoshPitCodes/moshpitcodes.wsl?color=B16286&labelColor=282828&style=for-the-badge&logo=github&logoColor=B16286">
+            <img src="https://img.shields.io/github/repo-size/MoshPitCodes/moshpitcodes.wsl?color=B16286&labelColor=282828&style=for-the-badge&logo=github&logoColor=B16286" alt="Repository Size">
          </a>
          <a href="https://www.microsoft.com/windows/wsl">
-            <img src="https://img.shields.io/badge/WSL2-Windows_11-blue.svg?style=for-the-badge&labelColor=282828&logo=windows&logoColor=458588&color=458588">
+            <img src="https://img.shields.io/badge/WSL2-Windows_11-blue.svg?style=for-the-badge&labelColor=282828&logo=windows&logoColor=458588&color=458588" alt="WSL2 on Windows 11">
          </a>
          <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/blob/main/LICENSE">
-            <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=Apache--2.0&colorA=282828&colorB=98971A&logo=apache&logoColor=98971A&"/>
+            <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=Apache--2.0&colorA=282828&colorB=98971A&logo=apache&logoColor=98971A&" alt="Apache 2.0 License"/>
          </a>
       </div>
       <br>
       <div align="center">
          <a href="https://www.ansible.com/">
-            <img src="https://img.shields.io/badge/Ansible-2.16+-EE0000.svg?style=for-the-badge&labelColor=282828&logo=ansible&logoColor=EE0000">
+            <img src="https://img.shields.io/badge/Ansible-2.16+-EE0000.svg?style=for-the-badge&labelColor=282828&logo=ansible&logoColor=EE0000" alt="Ansible 2.16+">
          </a>
          <a href="https://docs.microsoft.com/en-us/powershell/">
-            <img src="https://img.shields.io/badge/PowerShell-7.5+-5391FE.svg?style=for-the-badge&labelColor=282828&logo=powershell&logoColor=5391FE">
+            <img src="https://img.shields.io/badge/PowerShell-7.5+-5391FE.svg?style=for-the-badge&labelColor=282828&logo=powershell&logoColor=5391FE" alt="PowerShell 7.5+">
          </a>
          <a href="https://yaml.org/">
-            <img src="https://img.shields.io/badge/YAML-Configuration-CB171E.svg?style=for-the-badge&labelColor=282828&logo=yaml&logoColor=CB171E">
+            <img src="https://img.shields.io/badge/YAML-Configuration-CB171E.svg?style=for-the-badge&labelColor=282828&logo=yaml&logoColor=CB171E" alt="YAML Configuration">
          </a>
       </div>
       <br>
@@ -43,9 +43,13 @@
 
 # 🗃️ Overview
 
-Complete automation solution for installing and configuring WSL2 (Windows Subsystem for Linux) on Windows 11 with a comprehensive Ubuntu development environment managed by Ansible. This two-phase approach automates everything from WSL2 installation to a fully configured development workspace with Docker, Kubernetes tools, AI tools, and more.
+Complete automation solution for installing and configuring WSL2 (Windows Subsystem for Linux) on Windows 11
+with a comprehensive Ubuntu development environment managed by Ansible. This two-phase approach automates
+everything from WSL2 installation to a fully configured development workspace with Docker, Kubernetes tools,
+AI tools, and more.
 
-> **Note:** Throughout this documentation, `~/development/moshpitcodes.wsl` is used as an example path. You can clone the repository to any location you prefer - just adjust the paths accordingly.
+> **Note:** Throughout this documentation, `~/development/moshpitcodes.wsl` is used as an example path.
+> You can clone the repository to any location you prefer - just adjust the paths accordingly.
 
 <br/>
 
@@ -78,11 +82,14 @@ Complete automation solution for installing and configuring WSL2 (Windows Subsys
 # 🚀 **Quick Start**
 
 > [!CAUTION]
-> Customizing system configurations, particularly those affecting operating systems, may lead to unforeseen effects and potentially disrupt your system's standard operations. Although I've personally tested these settings on my own hardware, they might not perform identically on your specific setup.
+> Customizing system configurations, particularly those affecting operating systems, may lead to unforeseen
+> effects and potentially disrupt your system's standard operations. Although I've personally tested these
+> settings on my own hardware, they might not perform identically on your specific setup.
 > **I cannot assume responsibility for any problems that might result from implementing this configuration.**
 
 > [!WARNING]
-> You **must** examine the configuration details and adjust them according to your specific requirements before proceeding. Review [vars/user_environment.yml](ansible/vars/user_environment.yml) carefully.
+> You **must** examine the configuration details and adjust them according to your specific requirements
+> before proceeding. Review [vars/user_environment.yml](ansible/vars/user_environment.yml) carefully.
 
 <br/>
 
@@ -92,6 +99,7 @@ Before starting, ensure you have:
 
 > [!NOTE]
 > This was tested with the following parameters:
+>
 > - Windows 11 (22H2 or later recommended)
 > - PowerShell 7.5 or higher
 > - Administrator privileges on Windows
@@ -136,7 +144,8 @@ cd moshpitcodes.wsl
 ## 3. **Phase 2: Configure Ubuntu (WSL)**
 
 > [!TIP]
-> To ensure you understand what you're executing, it's advisable to review the code base or at minimum consult the documentation thoroughly prior to running the automation.
+> To ensure you understand what you're executing, it's advisable to review the code base or at minimum
+> consult the documentation thoroughly prior to running the automation.
 
 ### Clone Repository in WSL
 
@@ -163,7 +172,8 @@ cp vars/user_environment.yml.template vars/user_environment.yml
 nano vars/user_environment.yml
 ```
 
-> **Important:** The files `ansible.cfg` and `vars/user_environment.yml` are gitignored to protect your personal settings. You must copy them from the `.template` files on first clone.
+> **Important:** The files `ansible.cfg` and `vars/user_environment.yml` are gitignored to protect your
+> personal settings. You must copy them from the `.template` files on first clone.
 
 <br/>
 
@@ -251,12 +261,14 @@ gpg_enable_ssh_support: false
 ```
 
 **Security Notes:**
+
 - Private keys automatically set to mode 600 (read/write for owner only)
 - Public keys set to mode 644 (readable by all, writable by owner)
 - .ssh directory set to mode 700 (accessible only by owner)
 - Ensure your backup drive is mounted before running the playbook
 
 For detailed SSH and GPG setup, see:
+
 - [SSH Agent Guide](ansible/SSH_AGENT_GUIDE.md)
 - [GPG Keys Guide](ansible/GPG_KEYS_GUIDE.md)
 
@@ -266,7 +278,7 @@ For detailed SSH and GPG setup, see:
 
 # 📐 Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                    Windows 11 Host System                       │
 │  ┌───────────────────────────────────────────────────────────┐  │
@@ -384,15 +396,15 @@ cd ~/development/moshpitcodes.wsl/ansible
 <b>WSL Installation Issues</b>
 </summary>
 
-**"WSL 2 requires an update to its kernel component"**
+#### "WSL 2 requires an update to its kernel component"
 
-Download and install: https://aka.ms/wsl2kernel
+Download and install: <https://aka.ms/wsl2kernel>
 
 ```powershell
 wsl --set-default-version 2
 ```
 
-**"Please enable Virtual Machine Platform"**
+#### "Please enable Virtual Machine Platform"
 
 ```powershell
 Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
@@ -414,7 +426,7 @@ wsl --version
 <b>Ansible Issues</b>
 </summary>
 
-**"ansible: command not found"**
+#### "ansible: command not found"
 
 ```bash
 source ~/.bashrc
@@ -464,12 +476,14 @@ sudo nano /etc/wsl.conf
 ```
 
 Add:
+
 ```ini
 [boot]
 systemd=true
 ```
 
 Then:
+
 ```powershell
 wsl --shutdown
 wsl
@@ -483,10 +497,10 @@ wsl
 
 This project builds upon excellent work from the community:
 
-  - [WSL Documentation](https://docs.microsoft.com/en-us/windows/wsl/): Official Microsoft WSL documentation
-  - [Ansible Documentation](https://docs.ansible.com/): Comprehensive Ansible guides
-  - [Docker on WSL](https://docs.docker.com/desktop/wsl/): Docker WSL integration guide
-  - [Jeff Geerling's Ansible Work](https://www.jeffgeerling.com/): Ansible best practices and examples
+- [WSL Documentation](https://docs.microsoft.com/en-us/windows/wsl/): Official Microsoft WSL documentation
+- [Ansible Documentation](https://docs.ansible.com/): Comprehensive Ansible guides
+- [Docker on WSL](https://docs.docker.com/desktop/wsl/): Docker WSL integration guide
+- [Jeff Geerling's Ansible Work](https://www.jeffgeerling.com/): Ansible best practices and examples
 
 <br/>
 
@@ -495,11 +509,11 @@ This project builds upon excellent work from the community:
 
 <br/>
 
-<p align="center"><img src="https://api.star-history.com/svg?repos=MoshPitCodes/moshpitcodes.wsl&type=Timeline&theme=dark" /></p>
+<p align="center"><img src="https://api.star-history.com/svg?repos=MoshPitCodes/moshpitcodes.wsl&type=Timeline&theme=dark" alt="Star History Chart" /></p>
 
 <br/>
 
-<p align="center"><img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/footers/gray0_ctp_on_line.svg?sanitize=true" /></p>
+<p align="center"><img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/footers/gray0_ctp_on_line.svg?sanitize=true" alt="Catppuccin Footer" /></p>
 
 <!-- end of page, send back to the top -->
 
@@ -507,8 +521,3 @@ This project builds upon excellent work from the community:
   <a href="#readme">Back to the Top</a>
 </div>
 <!-- DO NOT TOUCH THIS SECTION#2: END -->
-
-<!-- Links -->
-[WSL Documentation]: https://docs.microsoft.com/en-us/windows/wsl/
-[Ansible Documentation]: https://docs.ansible.com/
-[Docker on WSL]: https://docs.docker.com/desktop/wsl/
