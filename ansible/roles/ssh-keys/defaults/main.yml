@@ -1,0 +1,23 @@
+---
+# SSH Keys role - default variables
+
+# Enable SSH key copying
+copy_ssh_keys: false
+
+# Source directory for SSH keys (Windows/WSL mount path)
+ssh_keys_source: ""
+
+# SSH directory permissions
+ssh_directory_mode: "0700"
+
+# SSH private key permissions (600 = read/write for owner only)
+ssh_private_key_mode: "0600"
+
+# SSH public key permissions (644 = read/write for owner, read for others)
+ssh_public_key_mode: "0644"
+
+# SSH config file permissions
+ssh_config_mode: "0600"
+
+# Specific files to copy (empty = copy all)
+ssh_files_to_copy: []

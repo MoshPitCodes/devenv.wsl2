@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#0D1117" stroke="#30363D" stroke-width="2"/>
+  
+  <!-- Terminal window frame -->
+  <rect x="40" y="50" width="120" height="90" rx="6" fill="#161B22" stroke="#30363D" stroke-width="2"/>
+  
+  <!-- Terminal header dots -->
+  <circle cx="52" cy="62" r="3" fill="#FF5F56"/>
+  <circle cx="64" cy="62" r="3" fill="#FFBD2E"/>
+  <circle cx="76" cy="62" r="3" fill="#27C93F"/>
+  
+  <!-- Terminal prompt symbol -->
+  <text x="50" y="100" font-family="monospace" font-size="28" fill="#58A6FF" font-weight="bold">&gt;_</text>
+  
+  <!-- Automation gear -->
+  <g transform="translate(120, 105)">
+    <!-- Gear shape -->
+    <path d="M 0,-12 L 3,-9 L 8.5,-10.6 L 9,0 L 8.5,10.6 L 3,9 L 0,12 L -3,9 L -8.5,10.6 L -9,0 L -8.5,-10.6 L -3,-9 Z" 
+          fill="none" stroke="#58A6FF" stroke-width="2.5"/>
+    <circle cx="0" cy="0" r="4" fill="#58A6FF"/>
+    
+    <!-- Play/automation arrow inside -->
+    <path d="M -1.5,-3 L -1.5,3 L 3,0 Z" fill="#0D1117"/>
+  </g>
+  
+  <!-- Subtle grid dots in background (representing code/structure) -->
+  <circle cx="50" cy="155" r="1.5" fill="#30363D" opacity="0.5"/>
+  <circle cx="70" cy="155" r="1.5" fill="#30363D" opacity="0.5"/>
+  <circle cx="90" cy="155" r="1.5" fill="#30363D" opacity="0.5"/>
+  <circle cx="110" cy="155" r="1.5" fill="#30363D" opacity="0.5"/>
+  <circle cx="130" cy="155" r="1.5" fill="#30363D" opacity="0.5"/>
+  <circle cx="150" cy="155" r="1.5" fill="#30363D" opacity="0.5"/>
+</svg>

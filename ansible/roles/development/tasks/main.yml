@@ -1,0 +1,235 @@
+---
+# Development role - tasks
+# Sets up development tools and programming language environments
+
+- name: Install development packages
+  apt:
+    name: "{{ development_packages }}"
+    state: present
+  tags: packages
+
+- name: Install Python packages
+  apt:
+    name: "{{ python_packages }}"
+    state: present
+  when: install_python | default(true)
+  tags: python
+
+- name: Install Python pip packages (user space)
+  pip:
+    name: "{{ pip_packages }}"
+    state: present
+    executable: pip3
+    extra_args: "--user --break-system-packages"
+  become: yes
+  become_user: "{{ target_user }}"
+  when:
+    - install_python | default(true)
+    - pip_packages is defined
+    - pip_packages | length > 0
+  tags: python
+
+- name: Extract Node.js major version
+  set_fact:
+    nodejs_major_version: "{{ nodejs_version.split('.')[0] }}"
+  when: install_nodejs | default(false)
+  tags: nodejs
+
+- name: Download NodeSource setup script
+  get_url:
+    url: "https://deb.nodesource.com/setup_{{ nodejs_major_version }}.x"
+    dest: /tmp/nodesource_setup.sh
+    mode: '0755'
+  when: install_nodejs | default(false)
+  tags: nodejs
+
+- name: Run NodeSource setup script
+  command: /tmp/nodesource_setup.sh
+  args:
+    creates: /etc/apt/sources.list.d/nodesource.list
+  when: install_nodejs | default(false)
+  tags: nodejs
+
+- name: Install Node.js
+  apt:
+    name: nodejs
+    state: present
+    update_cache: yes
+  when: install_nodejs | default(false)
+  tags: nodejs
+
+- name: Install npm global packages
+  npm:
+    name: "{{ item }}"
+    global: yes
+    state: present
+  loop: "{{ npm_global_packages }}"
+  when:
+    - install_nodejs | default(false)
+    - npm_global_packages is defined
+    - npm_global_packages | length > 0
+  tags: nodejs
+
+- name: Check if Go is installed
+  command: go version
+  register: go_installed
+  ignore_errors: yes
+  changed_when: false
+  when: install_golang | default(false)
+  tags: golang
+
+- name: Download Go
+  get_url:
+    url: "https://go.dev/dl/go{{ golang_version }}.linux-amd64.tar.gz"
+    dest: "/tmp/go{{ golang_version }}.linux-amd64.tar.gz"
+    mode: '0644'
+  when:
+    - install_golang | default(false)
+    - go_installed is failed
+  tags: golang
+
+- name: Remove old Go installation
+  file:
+    path: /usr/local/go
+    state: absent
+  when:
+    - install_golang | default(false)
+    - go_installed is failed
+  tags: golang
+
+- name: Extract Go archive
+  unarchive:
+    src: "/tmp/go{{ golang_version }}.linux-amd64.tar.gz"
+    dest: /usr/local
+    remote_src: yes
+  when:
+    - install_golang | default(false)
+    - go_installed is failed
+  tags: golang
+
+- name: Add Go to PATH
+  blockinfile:
+    path: "/home/{{ target_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED GO PATH"
+    block: |
+      # Go programming language
+      export PATH=$PATH:/usr/local/go/bin
+      export GOPATH=$HOME/go
+      export PATH=$PATH:$GOPATH/bin
+    create: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  when: install_golang | default(false)
+  tags: golang
+
+- name: Install Rust via rustup
+  shell: |
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  args:
+    creates: "/home/{{ target_user }}/.cargo/bin/rustc"
+  become: yes
+  become_user: "{{ target_user }}"
+  when: install_rust | default(false)
+  tags: rust
+
+- name: Add Rust to PATH
+  blockinfile:
+    path: "/home/{{ target_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED RUST PATH"
+    block: |
+      # Rust programming language
+      . "$HOME/.cargo/env"
+    create: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  when: install_rust | default(false)
+  tags: rust
+
+- name: Install Ruby and development headers
+  apt:
+    name:
+      - ruby-full
+      - ruby-dev
+    state: present
+  when: install_ruby | default(false)
+  tags: ruby
+
+- name: Configure gem installation directory for user
+  blockinfile:
+    path: "/home/{{ target_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED RUBY GEMS PATH"
+    block: |
+      # Ruby gems
+      export GEM_HOME="$HOME/.gem"
+      export PATH="$HOME/.gem/bin:$PATH"
+    create: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  when: install_ruby | default(false)
+  tags: ruby
+
+# ============================================================================
+# Doppler CLI Installation
+# ============================================================================
+
+- name: Check if Doppler is installed
+  command: doppler --version
+  register: doppler_installed
+  ignore_errors: yes
+  changed_when: false
+  when: install_doppler | default(false)
+  tags: doppler
+
+- name: Install Doppler CLI
+  when:
+    - install_doppler | default(false)
+    - doppler_installed is failed
+  tags: doppler
+  block:
+    - name: Install prerequisites for Doppler
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present
+
+    - name: Add Doppler GPG key
+      apt_key:
+        url: https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key
+        keyring: /usr/share/keyrings/doppler-archive-keyring.gpg
+        state: present
+
+    - name: Add Doppler repository
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main"
+        filename: doppler-cli
+        state: present
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Doppler CLI
+      apt:
+        name: doppler
+        state: present
+
+- name: Verify Doppler installation
+  command: doppler --version
+  register: doppler_version_output
+  changed_when: false
+  when: install_doppler | default(false)
+  tags: doppler
+
+- name: Display Doppler version
+  debug:
+    msg: "Doppler CLI installed: {{ doppler_version_output.stdout }}"
+  when:
+    - install_doppler | default(false)
+    - doppler_version_output is defined
+  tags: doppler

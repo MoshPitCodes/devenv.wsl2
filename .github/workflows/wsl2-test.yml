@@ -1,0 +1,153 @@
+---
+name: WSL2 Integration Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  powershell-syntax:
+    name: PowerShell Script Syntax Check
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Test PowerShell script syntax
+        shell: pwsh
+        run: |
+          $scripts = Get-ChildItem -Path powershell -Filter *.ps1 -Recurse
+
+          foreach ($script in $scripts) {
+            Write-Host "Testing: $($script.Name)"
+            $errors = $null
+            $null = [System.Management.Automation.PSParser]::Tokenize(
+              (Get-Content $script.FullName -Raw), [ref]$errors
+            )
+
+            if ($errors.Count -gt 0) {
+              Write-Error "Syntax errors in $($script.Name):"
+              $errors | ForEach-Object { Write-Error $_.Message }
+              exit 1
+            }
+          }
+          Write-Host "All PowerShell scripts passed syntax check"
+
+  ansible-syntax:
+    name: Ansible Playbook Syntax Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Ansible
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible
+
+      - name: Check Ansible playbook syntax
+        run: |
+          cd ansible
+          # Copy template files for syntax checking
+          cp ansible.cfg.template ansible.cfg 2>/dev/null || true
+          cp vars/user_environment.yml.template vars/user_environment.yml 2>/dev/null || true
+
+          # Run syntax check
+          ansible-playbook --syntax-check playbooks/main.yml
+
+      - name: Validate Ansible configuration
+        run: |
+          cd ansible
+          # Check if all required template files exist
+          required_templates=(
+            "ansible.cfg.template"
+            "vars/user_environment.yml.template"
+          )
+
+          for template in "${required_templates[@]}"; do
+            if [[ ! -f "$template" ]]; then
+              echo "Missing required template: $template"
+              exit 1
+            fi
+          done
+          echo "All required templates present"
+
+  bootstrap-test:
+    name: Test Bootstrap Script
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate bootstrap script
+        run: |
+          cd ansible
+          # Check if bootstrap.sh exists and is executable
+          if [[ ! -f "bootstrap.sh" ]]; then
+            echo "bootstrap.sh not found"
+            exit 1
+          fi
+
+          # Check for bash syntax errors
+          bash -n bootstrap.sh
+          echo "bootstrap.sh syntax is valid"
+
+      - name: Validate verify-setup script
+        run: |
+          cd ansible
+          # Check if verify-setup.sh exists
+          if [[ ! -f "verify-setup.sh" ]]; then
+            echo "verify-setup.sh not found"
+            exit 1
+          fi
+
+          # Check for bash syntax errors
+          bash -n verify-setup.sh
+          echo "verify-setup.sh syntax is valid"
+
+  role-structure:
+    name: Validate Ansible Role Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check role directory structure
+        run: |
+          cd ansible
+
+          required_roles=(
+            "common"
+            "ssh-keys"
+            "gpg-keys"
+            "development"
+            "kubernetes-tools"
+            "docker"
+            "ai-tools"
+          )
+
+          for role in "${required_roles[@]}"; do
+            role_path="roles/$role"
+            if [[ ! -d "$role_path" ]]; then
+              echo "Missing role directory: $role_path"
+              exit 1
+            fi
+
+            # Check for tasks/main.yml
+            if [[ ! -f "$role_path/tasks/main.yml" ]]; then
+              echo "Missing tasks/main.yml in role: $role"
+              exit 1
+            fi
+
+            echo "Role $role structure is valid"
+          done
+
+          echo "All role structures are valid"

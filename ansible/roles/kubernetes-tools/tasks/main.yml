@@ -1,0 +1,235 @@
+---
+# Kubernetes tools role - tasks
+# Installs Terraform, kubectl, and talosctl
+
+- name: Determine system architecture
+  set_fact:
+    system_arch: "{{ architecture_map[ansible_architecture] | default('amd64') }}"
+  tags: always
+
+# ============================================================================
+# Terraform Installation
+# ============================================================================
+
+- name: Check if Terraform is installed
+  command: terraform version
+  register: terraform_installed
+  ignore_errors: yes
+  changed_when: false
+  when: install_terraform | default(true)
+  tags: terraform
+
+- name: Get installed Terraform version
+  set_fact:
+    installed_terraform_version: "{{ terraform_installed.stdout | regex_search('Terraform v([0-9.]+)', '\\1') | first }}"
+  when:
+    - install_terraform | default(true)
+    - terraform_installed is succeeded
+  ignore_errors: yes
+  tags: terraform
+
+- name: Install/Update Terraform
+  when:
+    - install_terraform | default(true)
+    - terraform_installed is failed or (installed_terraform_version is defined and installed_terraform_version != terraform_version)
+  tags: terraform
+  block:
+    - name: Download Terraform
+      get_url:
+        url: "https://releases.hashicorp.com/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_linux_{{ system_arch }}.zip"
+        dest: "/tmp/terraform_{{ terraform_version }}_linux_{{ system_arch }}.zip"
+        mode: '0644'
+
+    - name: Unzip Terraform
+      unarchive:
+        src: "/tmp/terraform_{{ terraform_version }}_linux_{{ system_arch }}.zip"
+        dest: "{{ bin_directory }}"
+        remote_src: yes
+        mode: '0755'
+
+    - name: Clean up Terraform zip file
+      file:
+        path: "/tmp/terraform_{{ terraform_version }}_linux_{{ system_arch }}.zip"
+        state: absent
+
+- name: Verify Terraform installation
+  command: terraform version
+  register: terraform_version_output
+  changed_when: false
+  when: install_terraform | default(true)
+  tags: terraform
+
+- name: Display Terraform version
+  debug:
+    msg: "Terraform installed: {{ terraform_version_output.stdout_lines[0] }}"
+  when:
+    - install_terraform | default(true)
+    - terraform_version_output is defined
+  tags: terraform
+
+# ============================================================================
+# kubectl Installation
+# ============================================================================
+
+- name: Check if kubectl is installed
+  command: kubectl version --client
+  register: kubectl_installed
+  ignore_errors: yes
+  changed_when: false
+  when: install_kubectl | default(true)
+  tags: kubectl
+
+- name: Get installed kubectl version
+  set_fact:
+    installed_kubectl_version: "{{ kubectl_installed.stdout | regex_search('Client Version: v([0-9.]+)', '\\1') | first }}"
+  when:
+    - install_kubectl | default(true)
+    - kubectl_installed is succeeded
+  ignore_errors: yes
+  tags: kubectl
+
+- name: Install/Update kubectl
+  when:
+    - install_kubectl | default(true)
+    - kubectl_installed is failed or (installed_kubectl_version is defined and installed_kubectl_version != kubectl_version)
+  tags: kubectl
+  block:
+    - name: Download kubectl
+      get_url:
+        url: "https://dl.k8s.io/release/v{{ kubectl_version }}/bin/linux/{{ system_arch }}/kubectl"
+        dest: "{{ bin_directory }}/kubectl"
+        mode: '0755'
+
+    - name: Download kubectl checksum
+      get_url:
+        url: "https://dl.k8s.io/release/v{{ kubectl_version }}/bin/linux/{{ system_arch }}/kubectl.sha256"
+        dest: "/tmp/kubectl.sha256"
+        mode: '0644'
+
+    - name: Verify kubectl checksum
+      shell: |
+        echo "$(cat /tmp/kubectl.sha256) {{ bin_directory }}/kubectl" | sha256sum --check
+      register: kubectl_checksum
+      changed_when: false
+
+    - name: Clean up kubectl checksum file
+      file:
+        path: "/tmp/kubectl.sha256"
+        state: absent
+
+- name: Verify kubectl installation
+  command: kubectl version --client
+  register: kubectl_version_output
+  changed_when: false
+  when: install_kubectl | default(true)
+  tags: kubectl
+
+- name: Display kubectl version
+  debug:
+    msg: "kubectl installed: {{ kubectl_version_output.stdout_lines[0] }}"
+  when:
+    - install_kubectl | default(true)
+    - kubectl_version_output is defined
+  tags: kubectl
+
+# ============================================================================
+# talosctl Installation
+# ============================================================================
+
+- name: Check if talosctl is installed
+  command: talosctl version --client
+  register: talosctl_installed
+  ignore_errors: yes
+  changed_when: false
+  when: install_talosctl | default(true)
+  tags: talosctl
+
+- name: Get installed talosctl version
+  set_fact:
+    installed_talosctl_version: "{{ talosctl_installed.stdout | regex_search('Tag:\\s+v([0-9.]+)', '\\1') | first }}"
+  when:
+    - install_talosctl | default(true)
+    - talosctl_installed is succeeded
+  ignore_errors: yes
+  tags: talosctl
+
+- name: Install/Update talosctl
+  when:
+    - install_talosctl | default(true)
+    - talosctl_installed is failed or (installed_talosctl_version is defined and installed_talosctl_version != talosctl_version)
+  tags: talosctl
+  block:
+    - name: Download talosctl
+      get_url:
+        url: "https://github.com/siderolabs/talos/releases/download/v{{ talosctl_version }}/talosctl-linux-{{ system_arch }}"
+        dest: "{{ bin_directory }}/talosctl"
+        mode: '0755'
+
+- name: Verify talosctl installation
+  command: talosctl version --client
+  register: talosctl_version_output
+  changed_when: false
+  when: install_talosctl | default(true)
+  tags: talosctl
+
+- name: Display talosctl version
+  debug:
+    msg: "talosctl installed: {{ talosctl_version_output.stdout_lines | select('search', 'Tag:') | first }}"
+  when:
+    - install_talosctl | default(true)
+    - talosctl_version_output is defined
+  tags: talosctl
+
+# ============================================================================
+# Shell Completion
+# ============================================================================
+
+- name: Setup kubectl bash completion
+  blockinfile:
+    path: "/home/{{ target_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED KUBECTL COMPLETION"
+    block: |
+      # kubectl completion
+      if command -v kubectl &> /dev/null; then
+        source <(kubectl completion bash)
+        complete -o default -F __start_kubectl k
+        alias k=kubectl
+      fi
+    create: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  when: install_kubectl | default(true)
+  tags: kubectl
+
+- name: Setup talosctl bash completion
+  blockinfile:
+    path: "/home/{{ target_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED TALOSCTL COMPLETION"
+    block: |
+      # talosctl completion
+      if command -v talosctl &> /dev/null; then
+        source <(talosctl completion bash)
+      fi
+    create: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  when: install_talosctl | default(true)
+  tags: talosctl
+
+- name: Setup terraform bash completion
+  blockinfile:
+    path: "/home/{{ target_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED TERRAFORM COMPLETION"
+    block: |
+      # terraform completion
+      if command -v terraform &> /dev/null; then
+        complete -C $(which terraform) terraform
+      fi
+    create: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  when: install_terraform | default(true)
+  tags: terraform

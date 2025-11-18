@@ -1,0 +1,108 @@
+[defaults]
+# Ansible configuration for WSL2 localhost management
+# See: https://docs.ansible.com/ansible/latest/reference_appendices/config.html
+
+# Inventory file location
+inventory = ./inventory/hosts
+
+# Disable host key checking for localhost
+host_key_checking = False
+
+# Number of parallel processes
+forks = 5
+
+# Timeout for connection plugins
+timeout = 10
+
+# Default remote user (not used for localhost but good to set)
+remote_user = remoteuser
+
+# Output formatting
+stdout_callback = ansible.builtin.default
+result_format = yaml
+bin_ansible_callbacks = True
+
+# Display skipped tasks
+display_skipped_hosts = True
+
+# Display task arguments in output
+display_args_to_stdout = False
+
+# Show custom stats
+show_custom_stats = True
+
+# Ansible facts gathering
+gathering = smart
+fact_caching = jsonfile
+fact_caching_connection = ~/.ansible/facts_cache
+fact_caching_timeout = 86400
+
+# Retry files (disable to avoid clutter)
+retry_files_enabled = False
+
+# Role path
+roles_path = ./roles:~/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles
+
+# Collections path
+collections_paths = ~/.ansible/collections:/usr/share/ansible/collections
+
+# Inventory plugins
+enable_plugins = host_list, script, auto, yaml, ini, toml
+
+# Python interpreter discovery
+interpreter_python = auto_silent
+
+# Deprecation warnings (disabled to reduce noise)
+deprecation_warnings = False
+command_warnings = True
+
+# Localhost optimizations
+# Use local connection by default for localhost
+# transport = local  # Uncomment if needed
+
+# Colors
+nocolor = 0
+
+[inventory]
+# Inventory plugin settings
+enable_plugins = host_list, script, auto, yaml, ini, toml
+
+[privilege_escalation]
+# Privilege escalation settings
+become = True
+become_method = sudo
+become_user = root
+become_ask_pass = False
+
+# If you want to be prompted for sudo password, set to True
+# become_ask_pass = True
+
+[ssh_connection]
+# SSH connection settings (not used for localhost but good defaults)
+ssh_args = -o ControlMaster=auto -o ControlPersist=60s -o ForwardAgent=yes
+control_path = ~/.ansible/cp/ansible-ssh-%%h-%%p-%%r
+pipelining = True
+
+# Timeout for SSH connections
+timeout = 10
+
+[persistent_connection]
+# Connection timeout for network devices
+connect_timeout = 30
+command_timeout = 30
+
+[colors]
+# Ansible output colors
+highlight = white
+verbose = blue
+warn = bright purple
+error = red
+debug = dark gray
+deprecate = purple
+skip = cyan
+unreachable = red
+ok = green
+changed = yellow
+diff_add = green
+diff_remove = red
+diff_lines = cyan

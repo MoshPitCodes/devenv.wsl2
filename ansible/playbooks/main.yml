@@ -1,0 +1,91 @@
+---
+# Main Ansible Playbook for WSL2 Ubuntu Development Environment
+#
+# This playbook configures a complete development environment in WSL2.
+# It applies various roles to set up common tools, development packages,
+# and optional services like Docker.
+#
+# Usage:
+#   ansible-playbook -K playbooks/main.yml
+#   ansible-playbook --check playbooks/main.yml  # Dry run
+#   ansible-playbook --tags "common" playbooks/main.yml  # Run specific tags
+
+- name: Setup WSL2 Ubuntu Development Environment
+  hosts: local
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - ../vars/user_environment.yml
+
+  pre_tasks:
+    - name: Display environment information
+      debug:
+        msg:
+          - "Configuring WSL2 development environment"
+          - "Target: {{ ansible_hostname }}"
+          - "User: {{ target_user }}"
+          - "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+      tags: always
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      tags: always
+
+  roles:
+    - role: common
+      tags: common
+
+    - role: ssh-keys
+      tags: ssh
+      when: copy_ssh_keys | default(false)
+
+    - role: gpg-keys
+      tags: gpg
+      when: copy_gpg_keys | default(false)
+
+    - role: development
+      tags: development
+      when: install_development_tools | default(true)
+
+    - role: kubernetes-tools
+      tags: kubernetes
+      when: install_kubernetes_tools | default(false)
+
+    - role: docker
+      tags: docker
+      when: install_docker | default(false)
+
+    - role: ai-tools
+      tags: ai-tools
+      when: install_ai_tools | default(false)
+
+  post_tasks:
+    - name: Clean up apt cache
+      apt:
+        autoclean: yes
+        autoremove: yes
+      tags: cleanup
+
+    - name: Display completion message
+      debug:
+        msg:
+          - "=========================================="
+          - "  WSL2 Setup Complete!"
+          - "=========================================="
+          - ""
+          - "Installed components:"
+          - "  - Common system tools and utilities"
+          - "  - SSH keys copied: {{ 'Yes' if copy_ssh_keys else 'No' }}"
+          - "  - Development tools: {{ 'Yes' if install_development_tools else 'No' }}"
+          - "  - Docker: {{ 'Yes' if install_docker else 'No' }}"
+          - "  - AI Tools: {{ 'Yes' if install_ai_tools else 'No' }}"
+          - ""
+          - "Next steps:"
+          - "  1. Reload your shell: source ~/.bashrc"
+          - "  2. Verify installations"
+          - "  3. Customize vars/user_environment.yml as needed"
+          - "  4. Re-run playbook to apply changes"
+      tags: always

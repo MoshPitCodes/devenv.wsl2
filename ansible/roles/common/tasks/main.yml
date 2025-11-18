@@ -1,0 +1,115 @@
+---
+# Common role - tasks
+# Sets up common packages and configurations for all systems
+
+- name: Ensure system is up to date
+  apt:
+    upgrade: dist
+    update_cache: yes
+    cache_valid_time: 3600
+  tags: update
+
+- name: Install common system packages
+  apt:
+    name: "{{ common_packages }}"
+    state: present
+  tags: packages
+
+- name: Install extra packages if defined
+  apt:
+    name: "{{ extra_packages }}"
+    state: present
+  when: extra_packages is defined and extra_packages | length > 0
+  tags: packages
+
+- name: Flatten git_config dictionary
+  set_fact:
+    git_config_flat: >-
+      {%- set result = {} -%}
+      {%- for section, settings in git_config.items() -%}
+        {%- if settings is mapping -%}
+          {%- for key, value in settings.items() -%}
+            {%- set _ = result.update({section ~ '.' ~ key: value}) -%}
+          {%- endfor -%}
+        {%- else -%}
+          {%- set _ = result.update({section: settings}) -%}
+        {%- endif -%}
+      {%- endfor -%}
+      {{ result }}
+  when: git_config is defined
+  tags: git
+
+- name: Configure git settings
+  git_config:
+    name: "{{ item.key }}"
+    value: "{{ item.value | string }}"
+    scope: global
+  loop: "{{ git_config_flat | default({}) | dict2items }}"
+  become: yes
+  become_user: "{{ target_user }}"
+  when: git_config_flat is defined and git_config_flat | length > 0
+  tags: git
+
+- name: Create bash aliases
+  blockinfile:
+    path: "/home/{{ target_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED BASH ALIASES"
+    block: |
+      # Custom aliases
+      {% for alias_name, alias_command in bash_aliases.items() %}
+      alias {{ alias_name }}='{{ alias_command }}'
+      {% endfor %}
+    create: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  when: bash_aliases is defined
+  tags: shell
+
+- name: Add environment variables to .bashrc
+  blockinfile:
+    path: "/home/{{ target_user }}/.bashrc"
+    marker: "# {mark} ANSIBLE MANAGED ENVIRONMENT VARIABLES"
+    block: |
+      # Environment variables
+      {% for var_name, var_value in environment_variables.items() %}
+      export {{ var_name }}="{{ var_value }}"
+      {% endfor %}
+    create: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+    mode: '0644'
+  when: environment_variables is defined
+  tags: shell
+
+- name: Configure vm.swappiness
+  sysctl:
+    name: vm.swappiness
+    value: "{{ vm_swappiness | default(10) }}"
+    state: present
+    sysctl_set: yes
+  when: vm_swappiness is defined
+  tags: performance
+
+- name: Setup unattended upgrades
+  apt:
+    name:
+      - unattended-upgrades
+      - apt-listchanges
+    state: present
+  when: enable_unattended_upgrades | default(false)
+  tags: security
+
+- name: Configure unattended upgrades
+  template:
+    src: 50unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/50unattended-upgrades
+    mode: '0644'
+  when: enable_unattended_upgrades | default(false)
+  tags: security
+
+- name: Ensure user shell is set correctly
+  user:
+    name: "{{ target_user }}"
+    shell: "{{ user_shell }}"
+  tags: shell

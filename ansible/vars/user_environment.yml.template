@@ -1,0 +1,343 @@
+---
+# User Environment Configuration Variables
+#
+# Customize this file to match your preferences and requirements.
+# After making changes, re-run the main playbook:
+#   ansible-playbook -K playbooks/main.yml
+
+# ============================================================================
+# User Configuration
+# ============================================================================
+
+# Primary user for the environment
+target_user: testuser
+
+# User's email (used for git config, etc.)
+user_email: your.email@example.com
+
+# User's full name (used for git config)
+user_full_name: Your Name
+
+# Default shell (bash, zsh, fish)
+user_shell: /bin/bash
+
+# ============================================================================
+# Feature Toggles
+# ============================================================================
+
+# Install development tools (compilers, build tools, etc.)
+install_development_tools: true
+
+# Install Docker and Docker Compose
+install_docker: true
+
+# Install Node.js and npm
+install_nodejs: true
+
+# Install Python development tools
+install_python: true
+
+# Install Go programming language
+install_golang: true
+
+# Install Rust programming language
+install_rust: true
+
+# Install Ruby and gems
+install_ruby: false
+
+# Install Kubernetes tools (kubectl, Terraform, talosctl)
+install_kubernetes_tools: true
+
+# Install Doppler CLI for secrets management
+install_doppler: true
+
+# Install AI-powered CLI tools (Gemini, Claude Code, Opencode)
+install_ai_tools: true
+
+# ============================================================================
+# Version Specifications
+# ============================================================================
+
+# Node.js version (from NodeSource)
+# Options: 18, 20, 21, etc.
+nodejs_version: "24.11.1"
+
+# Python version (in addition to system python3)
+# Leave empty to use system default
+python_version: ""
+
+# Go version (if install_golang is true)
+golang_version: "1.25.4"
+
+# Rust installation method: rustup (recommended)
+rust_install_method: "rustup"
+
+# Docker Compose version
+docker_compose_version: "2.40.3"
+
+# Kubernetes tools versions
+terraform_version: "1.13.5"
+kubectl_version: "1.32.0"
+talosctl_version: "1.9.2"
+
+# Individual tool toggles (if install_kubernetes_tools is true)
+install_terraform: true
+install_kubectl: true
+install_talosctl: true
+
+# ============================================================================
+# AI Tools Configuration
+# ============================================================================
+
+# Individual AI tool toggles (if install_ai_tools is true)
+install_gemini_cli: true
+install_claude_code: true
+install_opencode: true
+
+# Gemini CLI version (latest, preview, or nightly)
+gemini_cli_version: "latest"
+
+# Opencode installation method: script (recommended) or npm
+opencode_install_method: "script"
+
+# Opencode version (only used with npm method)
+opencode_version: "latest"
+
+# ============================================================================
+# Package Lists
+# ============================================================================
+
+# Common system packages to install
+common_packages:
+  # Essential tools
+  - vim
+  - neovim
+  - nano
+  - curl
+  - wget
+  - git
+  - unzip
+  - zip
+  - tar
+  - gzip
+
+  # System utilities
+  - htop
+  - tree
+  - jq
+  - tmux
+  - screen
+  - ncdu
+  - net-tools
+
+  # Network tools
+  - dnsutils
+  - iputils-ping
+  - traceroute
+  - netcat-openbsd
+
+  # Development essentials
+  - build-essential
+  - software-properties-common
+  - apt-transport-https
+  - ca-certificates
+  - gnupg
+  - lsb-release
+
+# Development packages (installed if install_development_tools is true)
+development_packages:
+  - gcc
+  - g++
+  - make
+  - cmake
+  - autoconf
+  - automake
+  - pkg-config
+  - gdb
+  - valgrind
+  - strace
+
+# Python packages (installed if install_python is true)
+python_packages:
+  - python3-pip
+  - python3-venv
+  - python3-dev
+  - ipython3
+  - python3-setuptools
+  - python3-wheel
+
+# Python pip packages (installed globally)
+pip_packages:
+  - pipenv
+  - poetry
+  - black
+  - flake8
+  - pylint
+  - pytest
+
+# Node.js global packages (installed if install_nodejs is true)
+npm_global_packages:
+  - yarn
+  - pnpm
+  - typescript
+  - ts-node
+  - nodemon
+  - prettier
+  - eslint
+
+# Additional packages you want to install
+# Add any extra packages here
+extra_packages: []
+  # - neovim
+  # - ripgrep
+  # - fd-find
+  # - bat
+  # - fzf
+
+# ============================================================================
+# Git Configuration
+# ============================================================================
+
+git_config:
+  user:
+    name: "{{ user_full_name }}"
+    email: "{{ user_email }}"
+  core:
+    editor: neovim
+    autocrlf: input
+  init:
+    defaultBranch: main
+  pull:
+    rebase: false
+  push:
+    default: simple
+    autoSetupRemote: true
+
+# ============================================================================
+# Docker Configuration
+# ============================================================================
+
+# Add user to docker group (allows running docker without sudo)
+docker_add_user_to_group: true
+
+# Docker daemon configuration
+docker_daemon_config:
+  log-driver: "json-file"
+  log-opts:
+    max-size: "10m"
+    max-file: "3"
+
+# ============================================================================
+# Shell Configuration
+# ============================================================================
+
+# Bash aliases to add
+bash_aliases:
+  ll: "ls -alF"
+  la: "ls -A"
+  l: "ls -CF"
+  grep: "grep --color=auto"
+  update: "sudo apt update && sudo apt upgrade -y"
+  cleanup: "sudo apt autoremove -y && sudo apt autoclean"
+
+# Environment variables to add to .bashrc
+environment_variables:
+  EDITOR: neovim
+  # Add more as needed
+
+# ============================================================================
+# WSL-Specific Configuration
+# ============================================================================
+
+# Enable systemd in WSL (requires WSL 0.67.6+)
+# This requires Windows 11 or Windows 10 with recent updates
+wsl_enable_systemd: false
+
+# Windows interop (allows running .exe files from WSL)
+wsl_windows_interop: true
+
+# ============================================================================
+# Security Settings
+# ============================================================================
+
+# Configure automatic security updates
+enable_unattended_upgrades: true
+
+# Install and configure UFW firewall
+configure_firewall: false
+
+# Firewall rules (if configure_firewall is true)
+firewall_allowed_ports:
+  - "22/tcp"   # SSH
+  - "80/tcp"   # HTTP
+  - "443/tcp"  # HTTPS
+  - "3000/tcp" # Common dev port
+
+# ============================================================================
+# Performance Tuning
+# ============================================================================
+
+# Swap usage (0 = minimal swapping, 100 = aggressive swapping)
+# Default is 60, lower values reduce swap usage
+vm_swappiness: 10
+
+# ============================================================================
+# SSH Configuration
+# ============================================================================
+
+# Enable SSH key copying from backup location
+copy_ssh_keys: true
+
+# Enable automatic ssh-agent startup and key loading
+ssh_agent_autostart: true
+ssh_agent_autoload_keys: true
+
+# Source directory for SSH keys (Windows/WSL mount path)
+ssh_keys_source: "/path/to/SSH/source"
+
+# Enable GPG key copying from backup location
+copy_gpg_keys: true
+
+# Source directory for GPG keys (Windows/WSL mount path)
+gpg_keys_source: "/path/to/GPG/source"
+
+# Enable GPG agent SSH support (allows using GPG keys for SSH)
+gpg_enable_ssh_support: false
+
+# SSH directory permissions
+ssh_directory_mode: "0700"
+
+# SSH private key permissions
+ssh_private_key_mode: "0600"
+
+# SSH public key permissions
+ssh_public_key_mode: "0644"
+
+# SSH config file permissions
+ssh_config_mode: "0600"
+
+# Files to copy (can be customized)
+# Leave empty to copy all files from source directory
+ssh_files_to_copy: [
+
+]
+  # - id_rsa
+  # - id_rsa.pub
+  # - id_ed25519
+  # - id_ed25519.pub
+  # - config
+  # - known_hosts
+
+# ============================================================================
+# Dotfiles Management (Optional)
+# ============================================================================
+
+# Enable dotfiles management
+manage_dotfiles: false
+
+# Dotfiles repository URL (if manage_dotfiles is true)
+dotfiles_repo: ""
+
+# Dotfiles installation method: symlink, copy
+dotfiles_method: symlink

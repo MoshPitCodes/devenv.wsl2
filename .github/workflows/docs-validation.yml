@@ -1,0 +1,103 @@
+---
+name: Documentation Validation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  markdown-lint:
+    name: Lint Markdown Files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install markdownlint-cli
+        run: npm install -g markdownlint-cli
+
+      - name: Run markdownlint
+        run: |
+          markdownlint '**/*.md' --ignore node_modules --config .markdownlint.json
+        continue-on-error: true
+
+  link-checker:
+    name: Check Markdown Links
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check links in markdown files
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: 'yes'
+          config-file: '.markdown-link-check.json'
+
+  docs-structure:
+    name: Validate Documentation Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required documentation files
+        run: |
+          required_files=(
+            "README.md"
+            "QUICK_START.md"
+            "ansible/QUICK_REFERENCE.md"
+            "ansible/SSH_AGENT_GUIDE.md"
+            "ansible/GPG_KEYS_GUIDE.md"
+          )
+
+          missing_files=()
+          for file in "${required_files[@]}"; do
+            if [[ ! -f "$file" ]]; then
+              echo "Missing required file: $file"
+              missing_files+=("$file")
+            else
+              echo "Found: $file"
+            fi
+          done
+
+          if [[ ${#missing_files[@]} -gt 0 ]]; then
+            echo "Missing ${#missing_files[@]} required documentation files"
+            exit 1
+          else
+            echo "All required documentation files present"
+          fi
+
+      - name: Validate version consistency
+        run: |
+          # Extract versions from user_environment.yml
+          if [[ -f "ansible/vars/user_environment.yml.template" ]]; then
+            echo "Checking version consistency in documentation..."
+
+            # Get versions from template
+            nodejs_version=$(grep "nodejs_version:" ansible/vars/user_environment.yml.template | awk '{print $2}' | tr -d '"')
+            golang_version=$(grep "golang_version:" ansible/vars/user_environment.yml.template | awk '{print $2}' | tr -d '"')
+
+            echo "Expected Node.js version: $nodejs_version"
+            echo "Expected Go version: $golang_version"
+
+            # Check if versions appear in README
+            if grep -q "$nodejs_version" README.md; then
+              echo "Node.js version found in README.md"
+            else
+              echo "WARNING: Node.js version not found in README.md"
+            fi
+
+            if grep -q "$golang_version" README.md; then
+              echo "Go version found in README.md"
+            else
+              echo "WARNING: Go version not found in README.md"
+            fi
+          fi

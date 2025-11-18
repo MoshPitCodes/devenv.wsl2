@@ -1,0 +1,156 @@
+---
+# GPG Keys role - tasks
+# Copies GPG keys from backup location to user's .gnupg directory
+
+- name: Check if GPG keys source directory exists
+  stat:
+    path: "{{ gpg_keys_source }}"
+  register: gpg_source_dir
+  tags: gpg
+
+- name: Display warning if source directory not found
+  debug:
+    msg:
+      - "WARNING: GPG keys source directory not found!"
+      - "Path: {{ gpg_keys_source }}"
+      - "Skipping GPG key copy. Mount the drive or check the path."
+  when: not gpg_source_dir.stat.exists
+  tags: gpg
+
+- name: GPG key copy tasks
+  when: gpg_source_dir.stat.exists
+  tags: gpg
+  block:
+    - name: Display source directory info
+      debug:
+        msg: "Found GPG keys source directory: {{ gpg_keys_source }}"
+
+    - name: Install GPG and rsync if not present
+      apt:
+        name:
+          - gnupg
+          - rsync
+        state: present
+
+    - name: Create .gnupg directory
+      file:
+        path: "/home/{{ target_user }}/.gnupg"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ gpg_directory_mode }}"
+
+    - name: Copy entire .gnupg directory from source using rsync
+      shell: |
+        rsync -a --chown={{ target_user }}:{{ target_user }} \
+          --exclude='*.lock' \
+          --exclude='*.tmp' \
+          --exclude='S.gpg-agent*' \
+          --exclude='random_seed' \
+          "{{ gpg_keys_source }}/" "/home/{{ target_user }}/.gnupg/"
+      args:
+        creates: "/home/{{ target_user }}/.gnupg/pubring.kbx"
+
+    - name: Find private key files
+      find:
+        paths: "/home/{{ target_user }}/.gnupg"
+        patterns:
+          - "*.key"
+          - "*.gpg"
+          - "*.asc"
+          - "secring.gpg"
+          - "pubring.kbx"
+          - "trustdb.gpg"
+        file_type: file
+        recurse: yes
+      register: gpg_private_files
+
+    - name: Set strict permissions on GPG files
+      file:
+        path: "{{ item.path }}"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ gpg_private_key_mode }}"
+      loop: "{{ gpg_private_files.files }}"
+      when: gpg_private_files.files is defined
+      no_log: true  # Don't log file names for security
+
+    - name: Ensure .gnupg directory has correct permissions
+      file:
+        path: "/home/{{ target_user }}/.gnupg"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ gpg_directory_mode }}"
+        recurse: no
+
+    - name: Check if private-keys-v1.d exists
+      stat:
+        path: "/home/{{ target_user }}/.gnupg/private-keys-v1.d"
+      register: private_keys_dir
+
+    - name: Set permissions on private-keys-v1.d if exists
+      file:
+        path: "/home/{{ target_user }}/.gnupg/private-keys-v1.d"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ gpg_directory_mode }}"
+        state: directory
+      when: private_keys_dir.stat.exists
+
+    - name: Check if openpgp-revocs.d exists
+      stat:
+        path: "/home/{{ target_user }}/.gnupg/openpgp-revocs.d"
+      register: revocs_dir
+
+    - name: Set permissions on openpgp-revocs.d if exists
+      file:
+        path: "/home/{{ target_user }}/.gnupg/openpgp-revocs.d"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ gpg_directory_mode }}"
+        state: directory
+      when: revocs_dir.stat.exists
+
+    - name: Configure gpg-agent for SSH support (optional)
+      blockinfile:
+        path: "/home/{{ target_user }}/.gnupg/gpg-agent.conf"
+        marker: "# {mark} ANSIBLE MANAGED GPG AGENT CONFIG"
+        block: |
+          # GPG Agent configuration
+          default-cache-ttl 600
+          max-cache-ttl 7200
+          enable-ssh-support
+        create: yes
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0600'
+      when: gpg_enable_ssh_support | default(false)
+
+    - name: Reload GPG agent
+      become: yes
+      become_user: "{{ target_user }}"
+      shell: |
+        gpgconf --kill gpg-agent
+        gpg-agent --daemon 2>/dev/null || true
+      changed_when: false
+      ignore_errors: yes
+
+    - name: List GPG keys (as user)
+      become: yes
+      become_user: "{{ target_user }}"
+      command: gpg --list-secret-keys
+      register: gpg_list_keys
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display GPG keys info
+      debug:
+        msg:
+          - "GPG keys have been copied successfully!"
+          - "Location: /home/{{ target_user }}/.gnupg/"
+          - "Directory permissions: {{ gpg_directory_mode }}"
+          - "File permissions: {{ gpg_private_key_mode }}"
+          - ""
+          - "Verify with: gpg --list-secret-keys"
+          - ""
+          - "{{ gpg_list_keys.stdout_lines | default(['No keys found or GPG not configured']) }}"

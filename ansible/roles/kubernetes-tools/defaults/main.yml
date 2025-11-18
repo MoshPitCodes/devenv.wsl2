@@ -1,0 +1,20 @@
+---
+# Kubernetes tools role - default variables
+
+# Installation toggles
+install_terraform: true
+install_kubectl: true
+install_talosctl: true
+
+# Version specifications
+terraform_version: "1.10.3"
+kubectl_version: "1.32.0"
+talosctl_version: "1.9.2"
+
+# Installation directory
+bin_directory: "/usr/local/bin"
+
+# Architecture mapping
+architecture_map:
+  x86_64: "amd64"
+  aarch64: "arm64"

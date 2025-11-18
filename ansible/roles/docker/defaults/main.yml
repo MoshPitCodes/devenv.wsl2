@@ -1,0 +1,12 @@
+---
+# Docker role - default variables
+
+docker_add_user_to_group: true
+
+docker_daemon_config:
+  log-driver: "json-file"
+  log-opts:
+    max-size: "10m"
+    max-file: "3"
+
+docker_compose_version: "2.24.0"

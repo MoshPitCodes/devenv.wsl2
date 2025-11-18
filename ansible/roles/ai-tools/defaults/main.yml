@@ -1,0 +1,21 @@
+---
+# AI Tools role - default variables
+
+# Gemini CLI Configuration
+install_gemini_cli: true
+gemini_cli_package: "@google/gemini-cli"
+gemini_cli_version: "latest"  # Options: latest, preview, nightly
+
+# Claude Code Configuration
+install_claude_code: true
+claude_code_package: "@anthropic-ai/claude-code"
+
+# Opencode Configuration
+install_opencode: true
+opencode_install_script: "https://opencode.ai/install"
+opencode_package: "opencode-ai"
+opencode_version: "latest"
+
+# Installation method for Opencode
+# Options: script (installs to ~/.opencode/bin), npm (global npm install)
+opencode_install_method: "script"

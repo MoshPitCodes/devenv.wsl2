@@ -1,0 +1,29 @@
+# Ansible Inventory for WSL2 Localhost Management
+#
+# This inventory file defines localhost as the target for Ansible playbooks.
+# Since we're managing the local WSL2 instance, we use connection: local
+# for optimal performance.
+
+[local]
+localhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3
+
+[local:vars]
+# Variables for all hosts in the local group
+ansible_user=moshpit
+ansible_become=true
+ansible_become_method=sudo
+
+# WSL-specific variables
+wsl_environment=true
+environment_type=development
+
+[wsl:children]
+# Group of all WSL-related hosts
+local
+
+[all:vars]
+# Global variables for all hosts
+ansible_python_interpreter=/usr/bin/python3
+
+# Prevent gathering facts about Windows host (not needed for localhost)
+gather_subset=!hardware

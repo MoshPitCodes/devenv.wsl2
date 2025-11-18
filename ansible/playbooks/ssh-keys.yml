@@ -1,0 +1,72 @@
+---
+# SSH Keys Playbook
+#
+# This playbook only handles SSH key copying
+#
+# Usage:
+#   ansible-playbook -K playbooks/ssh-keys.yml
+#   ansible-playbook --check playbooks/ssh-keys.yml  # Dry run
+
+- name: Copy SSH Keys to WSL2
+  hosts: local
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - ../vars/user_environment.yml
+
+  pre_tasks:
+    - name: Display SSH keys configuration
+      debug:
+        msg:
+          - "SSH Keys Configuration"
+          - "Copy SSH keys: {{ copy_ssh_keys }}"
+          - "Source: {{ ssh_keys_source }}"
+          - "Target user: {{ target_user }}"
+
+    - name: Verify source directory exists
+      stat:
+        path: "{{ ssh_keys_source }}"
+      register: source_check
+      when: copy_ssh_keys | default(false)
+
+    - name: Display source directory status
+      debug:
+        msg: "Source directory exists: {{ source_check.stat.exists | default('N/A - copy_ssh_keys is disabled') }}"
+      when: copy_ssh_keys | default(false)
+
+    - name: Fail if source directory doesn't exist
+      fail:
+        msg: |
+          SSH keys source directory not found!
+          Path: {{ ssh_keys_source }}
+
+          Please verify:
+          1. The path is correct in vars/user_environment.yml
+          2. The drive is mounted in WSL (check with: ls -la /mnt/f/)
+          3. The directory exists (check with: ls -la {{ ssh_keys_source }})
+      when:
+        - copy_ssh_keys | default(false)
+        - not source_check.stat.exists
+
+  roles:
+    - role: ssh-keys
+      when: copy_ssh_keys | default(false)
+
+  post_tasks:
+    - name: Display completion message
+      debug:
+        msg:
+          - "=========================================="
+          - "  SSH Keys Setup Complete!"
+          - "=========================================="
+          - ""
+          - "Verify with: ls -la ~/.ssh/"
+      when: copy_ssh_keys | default(false)
+
+    - name: Display skip message
+      debug:
+        msg:
+          - "SSH key copying is disabled"
+          - "Set copy_ssh_keys: true in vars/user_environment.yml to enable"
+      when: not (copy_ssh_keys | default(false))

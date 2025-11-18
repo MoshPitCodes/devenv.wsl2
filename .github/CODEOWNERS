@@ -1,0 +1,34 @@
+# CODEOWNERS file for WSL2 DevKit
+#
+# This file defines individuals or teams that are responsible for code in this repository.
+# Code owners are automatically requested for review when someone opens a pull request
+# that modifies code they own.
+#
+# More info: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything in the repo
+# Unless a later match takes precedence, these users will be requested for review
+* @MoshPitCodes
+
+# PowerShell Scripts
+/powershell/ @MoshPitCodes
+
+# Ansible Configuration
+/ansible/ @MoshPitCodes
+/ansible/playbooks/ @MoshPitCodes
+/ansible/roles/ @MoshPitCodes
+/ansible/vars/ @MoshPitCodes
+
+# Documentation
+*.md @MoshPitCodes
+/docs/ @MoshPitCodes
+
+# GitHub Workflows and Configuration
+/.github/ @MoshPitCodes
+/.github/workflows/ @MoshPitCodes
+
+# Configuration Files
+.gitignore @MoshPitCodes
+.yamllint @MoshPitCodes
+.markdownlint.json @MoshPitCodes
+.markdown-link-check.json @MoshPitCodes

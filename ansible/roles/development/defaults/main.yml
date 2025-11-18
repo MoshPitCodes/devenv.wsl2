@@ -1,0 +1,29 @@
+---
+# Development role - default variables
+
+development_packages:
+  - build-essential
+  - gcc
+  - g++
+  - make
+  - cmake
+
+python_packages:
+  - python3-pip
+  - python3-venv
+  - python3-dev
+
+pip_packages: []
+
+install_nodejs: false
+nodejs_version: "20"
+npm_global_packages: []
+
+install_python: true
+python_version: ""
+
+install_golang: false
+golang_version: "1.21"
+
+install_rust: false
+install_ruby: false

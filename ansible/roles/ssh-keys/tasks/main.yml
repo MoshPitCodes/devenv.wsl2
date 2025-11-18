@@ -1,0 +1,244 @@
+---
+# SSH Keys role - tasks
+# Copies SSH keys from backup location to user's .ssh directory
+
+- name: Check if SSH keys source directory exists
+  stat:
+    path: "{{ ssh_keys_source }}"
+  register: ssh_source_dir
+  tags: ssh
+
+- name: Display warning if source directory not found
+  debug:
+    msg:
+      - "WARNING: SSH keys source directory not found!"
+      - "Path: {{ ssh_keys_source }}"
+      - "Skipping SSH key copy. Mount the drive or check the path."
+  when: not ssh_source_dir.stat.exists
+  tags: ssh
+
+- name: SSH key copy tasks
+  when: ssh_source_dir.stat.exists
+  tags: ssh
+  block:
+    - name: Display source directory info
+      debug:
+        msg: "Found SSH keys source directory: {{ ssh_keys_source }}"
+
+    - name: Create .ssh directory
+      file:
+        path: "/home/{{ target_user }}/.ssh"
+        state: directory
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ ssh_directory_mode }}"
+
+    - name: Get list of files in source directory
+      find:
+        paths: "{{ ssh_keys_source }}"
+        file_type: file
+        hidden: yes
+      register: ssh_files_found
+      when: ssh_files_to_copy | length == 0
+
+    - name: Copy all SSH files from source
+      copy:
+        src: "{{ item.path }}"
+        dest: "/home/{{ target_user }}/.ssh/{{ item.path | basename }}"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: preserve
+        remote_src: yes
+      loop: "{{ ssh_files_found.files }}"
+      when:
+        - ssh_files_to_copy | length == 0
+        - ssh_files_found.files is defined
+      no_log: true  # Don't log file names for security
+
+    - name: Copy specific SSH files
+      copy:
+        src: "{{ ssh_keys_source }}/{{ item }}"
+        dest: "/home/{{ target_user }}/.ssh/{{ item }}"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: preserve
+        remote_src: yes
+      loop: "{{ ssh_files_to_copy }}"
+      when: ssh_files_to_copy | length > 0
+      no_log: true  # Don't log file names for security
+
+    - name: Find private key files (files without extensions or with .key)
+      find:
+        paths: "/home/{{ target_user }}/.ssh"
+        patterns:
+          - "id_*"
+          - "*.key"
+        excludes:
+          - "*.pub"
+          - "*.ppk"
+        file_type: file
+      register: private_keys
+
+    - name: Set permissions on private key files
+      file:
+        path: "{{ item.path }}"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ ssh_private_key_mode }}"
+      loop: "{{ private_keys.files }}"
+      when: private_keys.files is defined
+      no_log: true  # Don't log file names for security
+
+    - name: Find public key files
+      find:
+        paths: "/home/{{ target_user }}/.ssh"
+        patterns: "*.pub"
+        file_type: file
+      register: public_keys
+
+    - name: Set permissions on public key files
+      file:
+        path: "{{ item.path }}"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ ssh_public_key_mode }}"
+      loop: "{{ public_keys.files }}"
+      when: public_keys.files is defined
+
+    - name: Check if SSH config exists
+      stat:
+        path: "/home/{{ target_user }}/.ssh/config"
+      register: ssh_config_file
+
+    - name: Set permissions on SSH config if exists
+      file:
+        path: "/home/{{ target_user }}/.ssh/config"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ ssh_config_mode }}"
+      when: ssh_config_file.stat.exists
+
+    - name: Check if known_hosts exists
+      stat:
+        path: "/home/{{ target_user }}/.ssh/known_hosts"
+      register: known_hosts_file
+
+    - name: Set permissions on known_hosts if exists
+      file:
+        path: "/home/{{ target_user }}/.ssh/known_hosts"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ ssh_public_key_mode }}"
+      when: known_hosts_file.stat.exists
+
+    - name: Check if authorized_keys exists
+      stat:
+        path: "/home/{{ target_user }}/.ssh/authorized_keys"
+      register: authorized_keys_file
+
+    - name: Set permissions on authorized_keys if exists
+      file:
+        path: "/home/{{ target_user }}/.ssh/authorized_keys"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: "{{ ssh_private_key_mode }}"
+      when: authorized_keys_file.stat.exists
+
+    - name: Configure ssh-agent auto-start in .bashrc
+      blockinfile:
+        path: "/home/{{ target_user }}/.bashrc"
+        marker: "# {mark} ANSIBLE MANAGED SSH AGENT"
+        block: |
+          # SSH Agent configuration
+          SSH_ENV="$HOME/.ssh/agent-environment"
+
+          function start_agent {
+              echo "Initializing new SSH agent..."
+              /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
+              echo "succeeded"
+              chmod 600 "${SSH_ENV}"
+              . "${SSH_ENV}" > /dev/null
+          }
+
+          # Source SSH settings, if applicable
+          if [ -f "${SSH_ENV}" ]; then
+              . "${SSH_ENV}" > /dev/null
+              #ps ${SSH_AGENT_PID} doesn't work under cywgin
+              ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
+                  start_agent;
+              }
+          else
+              start_agent;
+          fi
+        create: yes
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0644'
+      when: ssh_agent_autostart | default(true)
+
+    - name: Create SSH agent key loader script
+      copy:
+        dest: "/home/{{ target_user }}/.ssh/load-keys.sh"
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0700'
+        content: |
+          #!/bin/bash
+          # Automatically add SSH keys to agent
+
+          # Check if ssh-agent is running
+          if [ -z "$SSH_AUTH_SOCK" ]; then
+              echo "SSH agent not running. Please reload your shell."
+              exit 1
+          fi
+
+          # Find all private keys
+          shopt -s nullglob
+          for key in ~/.ssh/id_* ~/.ssh/*_rsa ~/.ssh/*_ed25519; do
+              # Skip public keys and known_hosts
+              if [[ ! "$key" =~ \.pub$ ]] && [[ ! "$key" =~ known_hosts ]]; then
+                  # Check if key is already added
+                  if ! ssh-add -l | grep -q "$(ssh-keygen -lf "$key" 2>/dev/null | awk '{print $2}')"; then
+                      echo "Adding key: $(basename $key)"
+                      ssh-add "$key" 2>/dev/null
+                  fi
+              fi
+          done
+
+          echo ""
+          echo "Loaded SSH keys:"
+          ssh-add -l
+
+    - name: Configure automatic key loading in .bashrc
+      blockinfile:
+        path: "/home/{{ target_user }}/.bashrc"
+        marker: "# {mark} ANSIBLE MANAGED SSH KEY AUTOLOAD"
+        block: |
+          # Auto-load SSH keys on shell start (only if not already loaded)
+          if [ -n "$SSH_AUTH_SOCK" ] && [ -x ~/.ssh/load-keys.sh ]; then
+              # Only load if no keys are currently loaded
+              if ! ssh-add -l &>/dev/null; then
+                  ~/.ssh/load-keys.sh 2>/dev/null
+              fi
+          fi
+        create: yes
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+        mode: '0644'
+      when: ssh_agent_autoload_keys | default(true)
+
+    - name: Display completion message
+      debug:
+        msg:
+          - "SSH keys have been copied successfully!"
+          - "Location: /home/{{ target_user }}/.ssh/"
+          - "Private keys set to mode {{ ssh_private_key_mode }}"
+          - "Public keys set to mode {{ ssh_public_key_mode }}"
+          - ""
+          - "SSH Agent Configuration:"
+          - "  - Agent will auto-start on shell login"
+          - "  - Keys will be loaded automatically"
+          - "  - Manual loading: ~/.ssh/load-keys.sh"
+          - ""
+          - "To activate ssh-agent now: source ~/.bashrc"
+          - "Verify with: ssh-add -l"

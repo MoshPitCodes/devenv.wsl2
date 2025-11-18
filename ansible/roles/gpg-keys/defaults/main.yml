@@ -1,0 +1,16 @@
+---
+# GPG Keys role - default variables
+
+# GPG directory permissions (recommended by GPG)
+gpg_directory_mode: "0700"
+
+# GPG file permissions
+gpg_private_key_mode: "0600"
+gpg_public_key_mode: "0644"
+
+# Files/directories to exclude from copying
+gpg_exclude_patterns:
+  - "*.lock"
+  - "*.tmp"
+  - "S.gpg-agent*"
+  - "random_seed"
