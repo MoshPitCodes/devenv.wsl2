@@ -35,6 +35,21 @@
          </a>
       </div>
       <br>
+      <div align="center">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl2/actions/workflows/ansible-lint.yml">
+            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/moshpitcodes.wsl2/ansible-lint.yml?branch=main&style=for-the-badge&labelColor=282828&logo=ansible&logoColor=EE0000&label=Ansible%20Lint" alt="Ansible Lint">
+         </a>
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl2/actions/workflows/powershell-lint.yml">
+            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/moshpitcodes.wsl2/powershell-lint.yml?branch=main&style=for-the-badge&labelColor=282828&logo=powershell&logoColor=5391FE&label=PowerShell%20Lint" alt="PowerShell Lint">
+         </a>
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl2/actions/workflows/docs-validation.yml">
+            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/moshpitcodes.wsl2/docs-validation.yml?branch=main&style=for-the-badge&labelColor=282828&logo=markdown&logoColor=FFFFFF&label=Docs%20Validation" alt="Docs Validation">
+         </a>
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl2/actions/workflows/wsl2-test.yml">
+            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/moshpitcodes.wsl2/wsl2-test.yml?branch=main&style=for-the-badge&labelColor=282828&logo=windows&logoColor=458588&label=WSL2%20Tests" alt="WSL2 Integration Tests">
+         </a>
+      </div>
+      <br>
    </div>
 </h1>
 
