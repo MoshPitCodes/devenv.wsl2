@@ -36,9 +36,10 @@ jobs:
 
       - name: Check Ansible playbook syntax
         run: |
-          cd ansible
-          ansible-playbook --syntax-check -i inventory/hosts playbooks/main.yml
+          ansible-playbook --syntax-check -i ansible/inventory/hosts ansible/playbooks/main.yml
         continue-on-error: false
+        env:
+          ANSIBLE_ROLES_PATH: ansible/roles
 
       - name: Validate all YAML files
         run: |
