@@ -14,14 +14,16 @@ This Ansible setup automatically copies GPG keys from your backup location to WS
 ### 1. GPG Keys Copy
 
 The role:
+
 1. Checks if the source directory exists
 2. Copies all GPG keyring files and configuration
 3. Sets proper ownership and permissions
-4. Excludes temporary files (*.lock, *.tmp, random_seed, etc.)
+4. Excludes temporary files (`*.lock`, `*.tmp`, `random_seed`, etc.)
 
 ### 2. Directory Structure
 
 The following directories/files are copied:
+
 - `pubring.kbx` - Public keyring
 - `trustdb.gpg` - Trust database
 - `private-keys-v1.d/` - Private keys
@@ -46,6 +48,7 @@ gpg_enable_ssh_support: false
 ## Manual Commands
 
 ### List GPG Keys
+
 ```bash
 # List public keys
 gpg --list-keys
@@ -58,6 +61,7 @@ gpg --fingerprint
 ```
 
 ### Import Additional Keys
+
 ```bash
 # Import a public key
 gpg --import public-key.asc
@@ -67,6 +71,7 @@ gpg --import private-key.asc
 ```
 
 ### Export Keys
+
 ```bash
 # Export public key
 gpg --armor --export your-email@example.com > public-key.asc
@@ -76,6 +81,7 @@ gpg --armor --export-secret-keys your-email@example.com > private-key.asc
 ```
 
 ### Trust Level
+
 ```bash
 # Edit key trust
 gpg --edit-key your-email@example.com
@@ -85,6 +91,7 @@ gpg --edit-key your-email@example.com
 ```
 
 ### Sign and Encrypt
+
 ```bash
 # Sign a file
 gpg --sign file.txt
@@ -102,6 +109,7 @@ gpg --decrypt file.txt.gpg > file.txt
 ## Git Commit Signing
 
 ### Configure Git to Use GPG
+
 ```bash
 # Set your GPG key for Git
 gpg --list-secret-keys --keyid-format=long
@@ -112,6 +120,7 @@ git config --global commit.gpgsign true
 ```
 
 ### Sign Commits
+
 ```bash
 # Commits will be signed automatically if commit.gpgsign is true
 git commit -m "Your commit message"
@@ -126,11 +135,13 @@ git log --show-signature
 ## GPG Agent Configuration
 
 The GPG agent is automatically configured with:
+
 - Cache TTL: 600 seconds (10 minutes)
 - Max cache TTL: 7200 seconds (2 hours)
 - Optional SSH support (if enabled)
 
 ### Manual GPG Agent Commands
+
 ```bash
 # Reload GPG agent
 gpgconf --kill gpg-agent
@@ -148,17 +159,21 @@ gpgconf --reload gpg-agent
 If you enable `gpg_enable_ssh_support: true`, you can use GPG keys for SSH authentication:
 
 ### Setup
+
 1. Enable in config:
+
    ```yaml
    gpg_enable_ssh_support: true
    ```
 
 2. Add to `.bashrc`:
+
    ```bash
    export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
    ```
 
 3. Add your GPG authentication subkey:
+
    ```bash
    ssh-add -L
    ```
@@ -166,6 +181,7 @@ If you enable `gpg_enable_ssh_support: true`, you can use GPG keys for SSH authe
 ## Troubleshooting
 
 ### "No secret key" Error
+
 ```bash
 # Check if keys were copied
 ls -la ~/.gnupg/
@@ -176,6 +192,7 @@ chmod 600 ~/.gnupg/*
 ```
 
 ### GPG Agent Not Running
+
 ```bash
 # Start GPG agent
 gpg-agent --daemon
@@ -185,6 +202,7 @@ gpgconf --reload gpg-agent
 ```
 
 ### "Inappropriate ioctl for device" Error
+
 ```bash
 # Set GPG TTY
 export GPG_TTY=$(tty)
@@ -194,6 +212,7 @@ echo 'export GPG_TTY=$(tty)' >> ~/.bashrc
 ```
 
 ### Git Commit Signing Fails
+
 ```bash
 # Check GPG key
 gpg --list-secret-keys
@@ -243,17 +262,20 @@ git log --show-signature -1
 ## Running the Playbook
 
 ### Copy GPG keys only
+
 ```bash
 cd ~/development/moshpitcodes.wsl/ansible
 ansible-playbook -K --tags "gpg" playbooks/main.yml
 ```
 
 ### Copy both SSH and GPG keys
+
 ```bash
 ansible-playbook -K --tags "ssh,gpg" playbooks/main.yml
 ```
 
 ### Run full playbook
+
 ```bash
 ansible-playbook -K playbooks/main.yml
 ```
