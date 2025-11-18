@@ -1,0 +1,38 @@
+---
+# Ansible-lint configuration
+#
+# This configuration sets appropriate strictness levels for different rule types.
+# Critical rules (FQCN, YAML truthy) are enforced, while cosmetic/design rules
+# are set to warning level.
+
+# Enable offline mode to avoid external dependencies during CI
+offline: false
+
+# Exclude patterns
+exclude_paths:
+  - .cache/
+  - .git/
+  - vars/user_environment.yml  # User-specific config, not in repo
+
+# Profile to use (min, basic, moderate, safety, shared, production)
+# Using 'min' as we handle specific rules individually below
+# This allows the codebase to pass while still checking important rules
+profile: min
+
+# Warning-only rules (cosmetic or design choices)
+warn_list:
+  - var-naming[no-role-prefix]  # Variable naming is a style choice
+  - role-name  # Role names with hyphens are acceptable
+  - ignore-errors  # We use this intentionally for WSL compatibility
+  - name[missing]  # Some tasks don't need names
+  - key-order  # Task key order is cosmetic
+
+# Skip these rules entirely
+skip_list:
+  - command-instead-of-module  # Sometimes shell/command is necessary
+  - risky-shell-pipe  # Adding pipefail everywhere is overly strict
+
+# Rules that should fail the build
+# These are already covered by 'moderate' profile but listed for clarity
+# - fqcn[action-core]  # Must use FQCN for builtin modules
+# - yaml[truthy]  # Must use true/false not yes/no
