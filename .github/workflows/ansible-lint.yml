@@ -26,7 +26,7 @@ jobs:
       - name: Run ansible-lint
         run: |
           cd ansible
-          ansible-lint playbooks/main.yml
+          ansible-lint
         continue-on-error: false
 
       - name: Run yamllint
@@ -37,7 +37,7 @@ jobs:
       - name: Check Ansible playbook syntax
         run: |
           cd ansible
-          ansible-playbook --syntax-check playbooks/main.yml
+          ansible-playbook --syntax-check -i inventory/hosts playbooks/main.yml
         continue-on-error: false
 
       - name: Validate all YAML files
