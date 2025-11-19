@@ -524,7 +524,7 @@ This project builds upon excellent work from the community:
 
 <br/>
 
-<p align="center"><img src="https://api.star-history.com/svg?repos=MoshPitCodes/moshpitcodes.wsl&type=Timeline&theme=dark" alt="Star History Chart" /></p>
+<p align="center"><img src="https://api.star-history.com/svg?repos=MoshPitCodes/moshpitcodes.wsl2&type=Timeline&theme=dark" alt="Star History Chart" /></p>
 
 <br/>
 
