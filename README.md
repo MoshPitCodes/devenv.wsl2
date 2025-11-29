@@ -9,16 +9,16 @@
    <div align="center">
       <p></p>
       <div align="center">
-         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/stargazers">
-            <img src="https://img.shields.io/github/stars/MoshPitCodes/moshpitcodes.wsl?color=FABD2F&labelColor=282828&style=for-the-badge&logo=starship&logoColor=FABD2F" alt="GitHub Stars">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl2/stargazers">
+            <img src="https://img.shields.io/github/stars/MoshPitCodes/moshpitcodes.wsl2?color=FABD2F&labelColor=282828&style=for-the-badge&logo=starship&logoColor=FABD2F" alt="GitHub Stars">
          </a>
-         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/">
-            <img src="https://img.shields.io/github/repo-size/MoshPitCodes/moshpitcodes.wsl?color=B16286&labelColor=282828&style=for-the-badge&logo=github&logoColor=B16286" alt="Repository Size">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl2/">
+            <img src="https://img.shields.io/github/repo-size/MoshPitCodes/moshpitcodes.wsl2?color=B16286&labelColor=282828&style=for-the-badge&logo=github&logoColor=B16286" alt="Repository Size">
          </a>
          <a href="https://www.microsoft.com/windows/wsl">
             <img src="https://img.shields.io/badge/WSL2-Windows_11-blue.svg?style=for-the-badge&labelColor=282828&logo=windows&logoColor=458588&color=458588" alt="WSL2 on Windows 11">
          </a>
-         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/blob/main/LICENSE">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl2/blob/main/LICENSE">
             <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=Apache--2.0&colorA=282828&colorB=98971A&logo=apache&logoColor=98971A&" alt="Apache 2.0 License"/>
          </a>
       </div>
