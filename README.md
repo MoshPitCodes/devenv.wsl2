@@ -294,7 +294,7 @@ For detailed SSH and GPG setup, see:
 # 📐 Architecture
 
 ```mermaid
-graph TD
+flowchart TD
     subgraph Windows["Windows 11 Host System"]
         subgraph PowerShell["PowerShell Automation Layer"]
             PS1["01-Install-WSL2.ps1<br/>(WSL2 Installation)"]
@@ -304,19 +304,25 @@ graph TD
         subgraph WSL2["WSL2 Instance"]
             subgraph Ubuntu["Ubuntu Development Environment"]
                 subgraph Ansible["Ansible Configuration Layer"]
-                    Bootstrap["bootstrap.sh → Ansible Installation"]
-                    Playbook["playbooks/main.yml → Main Orchestration"]
+                    Bootstrap["bootstrap.sh<br/>Ansible Installation"]
+                    Playbook["playbooks/main.yml<br/>Main Orchestration"]
                 end
 
                 subgraph Roles["Ansible Roles"]
-                    direction LR
-                    Common["common<br/>(base system)"]
-                    SSH["ssh-keys<br/>(key management)"]
-                    GPG["gpg-keys<br/>(GPG setup)"]
-                    Dev["development<br/>(languages & tools)"]
-                    Docker["docker<br/>(containerization)"]
-                    K8s["kubernetes-tools<br/>(orchestration)"]
-                    AI["ai-tools<br/>(AI assistants)"]
+                    Common["common - base system"]
+                    SSH["ssh-keys - key management"]
+                    GPG["gpg-keys - GPG setup"]
+                    Dev["development - languages & tools"]
+                    Docker["docker - containerization"]
+                    K8s["kubernetes-tools - orchestration"]
+                    AI["ai-tools - AI assistants"]
+
+                    Common --> SSH
+                    SSH --> GPG
+                    GPG --> Dev
+                    Dev --> Docker
+                    Docker --> K8s
+                    K8s --> AI
                 end
             end
         end
