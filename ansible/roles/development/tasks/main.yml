@@ -394,14 +394,26 @@
         filename: github-cli
         state: present
 
-    - name: Update apt cache and install GitHub CLI
-      ansible.builtin.shell: |
-        apt-get update
-        apt-get install -y gh
-      args:
-        creates: /usr/bin/gh
+    - name: Download GitHub CLI deb package
+      ansible.builtin.get_url:
+        url: https://github.com/cli/cli/releases/download/v2.83.1/gh_2.83.1_linux_amd64.deb
+        dest: /tmp/gh.deb
+        mode: '0644'
+        timeout: 60
+      retries: 3
+      delay: 5
+
+    - name: Install GitHub CLI from deb package
+      ansible.builtin.apt:
+        deb: /tmp/gh.deb
+        state: present
       environment:
         DEBIAN_FRONTEND: noninteractive
+
+    - name: Clean up deb package
+      ansible.builtin.file:
+        path: /tmp/gh.deb
+        state: absent
 
 - name: Verify GitHub CLI installation
   ansible.builtin.command: gh --version
