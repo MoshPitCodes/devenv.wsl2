@@ -28,3 +28,4 @@ golang_version: "1.21"
 install_rust: false
 install_ruby: false
 install_nix: false
+install_gh_cli: false

@@ -342,3 +342,79 @@
     - nix_version_output is defined
     - nix_version_output.stdout is defined
   tags: nix
+
+# ============================================================================
+# GitHub CLI Installation
+# ============================================================================
+
+- name: Check if GitHub CLI is installed
+  ansible.builtin.command: gh --version
+  register: gh_installed
+  ignore_errors: true
+  changed_when: false
+  when: install_gh_cli | default(false)
+  tags: gh
+
+- name: Install GitHub CLI
+  when:
+    - install_gh_cli | default(false)
+    - gh_installed is failed
+  tags: gh
+  block:
+    - name: Install prerequisites for GitHub CLI
+      ansible.builtin.apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+        state: present
+
+    - name: Create keyrings directory
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Add GitHub CLI GPG key
+      ansible.builtin.shell: |
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
+        gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg
+      args:
+        creates: /etc/apt/keyrings/githubcli-archive-keyring.gpg
+
+    - name: Set permissions on GitHub CLI GPG key
+      ansible.builtin.file:
+        path: /etc/apt/keyrings/githubcli-archive-keyring.gpg
+        mode: '0644'
+
+    - name: Add GitHub CLI repository
+      ansible.builtin.apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main"
+        filename: github-cli
+        state: present
+
+    - name: Update apt cache
+      ansible.builtin.apt:
+        update_cache: true
+
+    - name: Install GitHub CLI
+      ansible.builtin.apt:
+        name: gh
+        state: present
+
+- name: Verify GitHub CLI installation
+  ansible.builtin.command: gh --version
+  register: gh_version_output
+  changed_when: false
+  when: install_gh_cli | default(false)
+  tags: gh
+
+- name: Display GitHub CLI version
+  ansible.builtin.debug:
+    msg: "GitHub CLI installed: {{ gh_version_output.stdout_lines[0] }}"
+  when:
+    - install_gh_cli | default(false)
+    - gh_version_output is defined
+    - gh_version_output.stdout_lines is defined
+  tags: gh
