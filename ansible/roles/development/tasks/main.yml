@@ -296,6 +296,32 @@
   ignore_errors: true
   tags: nix
 
+- name: Create Nix configuration directory
+  ansible.builtin.file:
+    path: /etc/nix
+    state: directory
+    mode: '0755'
+  when: install_nix | default(false)
+  tags: nix
+
+- name: Configure Nix experimental features
+  ansible.builtin.lineinfile:
+    path: /etc/nix/nix.conf
+    line: "experimental-features = nix-command flakes"
+    create: true
+    mode: '0644'
+  when: install_nix | default(false)
+  tags: nix
+
+- name: Restart nix-daemon to apply configuration
+  ansible.builtin.systemd:
+    name: nix-daemon
+    state: restarted
+  when:
+    - install_nix | default(false)
+  ignore_errors: true
+  tags: nix
+
 - name: Verify Nix installation
   ansible.builtin.shell: |
     . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
