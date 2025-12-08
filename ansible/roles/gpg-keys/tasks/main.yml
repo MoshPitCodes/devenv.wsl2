@@ -25,6 +25,16 @@
       ansible.builtin.debug:
         msg: "Found GPG keys source directory: {{ gpg_keys_source }}"
 
+    - name: Log GPG key copy operation start
+      ansible.builtin.lineinfile:
+        path: "/var/log/ansible-security-audit.log"
+        line: "{{ ansible_date_time.iso8601 }} | GPG_KEY_COPY | user={{ target_user }} | source={{ gpg_keys_source }} | action=START | ansible_user={{ ansible_user_id }}"
+        create: true
+        mode: '0600'
+        owner: root
+        group: root
+      become: true
+
     - name: Install GPG and rsync if not present
       apt:
         name:
@@ -144,6 +154,15 @@
       changed_when: false
       ignore_errors: true
 
+    - name: Log GPG key copy operation completion
+      ansible.builtin.lineinfile:
+        path: "/var/log/ansible-security-audit.log"
+        line: "{{ ansible_date_time.iso8601 }} | GPG_KEY_COPY | user={{ target_user }} | action=COMPLETE | files_copied={{ gpg_private_files.matched | default(0) }} | ansible_user={{ ansible_user_id }}"
+        mode: '0600'
+        owner: root
+        group: root
+      become: true
+
     - name: Display GPG keys info
       ansible.builtin.debug:
         msg:
@@ -155,3 +174,5 @@
           - "Verify with: gpg --list-secret-keys"
           - ""
           - "{{ gpg_list_keys.stdout_lines | default(['No keys found or GPG not configured']) }}"
+          - ""
+          - "AUDIT: Operation logged to /var/log/ansible-security-audit.log"

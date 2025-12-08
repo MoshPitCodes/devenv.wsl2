@@ -16,14 +16,14 @@ python_packages:
 pip_packages: []
 
 install_nodejs: false
-nodejs_version: "20"
+nodejs_version: "25.2.1"
 npm_global_packages: []
 
 install_python: true
 python_version: ""
 
 install_golang: false
-golang_version: "1.21"
+golang_version: "1.25.4"
 
 install_rust: false
 install_ruby: false

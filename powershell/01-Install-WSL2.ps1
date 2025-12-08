@@ -220,15 +220,31 @@ try {
             Write-Host "`n========================================" -ForegroundColor Yellow
             Write-Host "  System Restart Required" -ForegroundColor Yellow
             Write-Host "========================================" -ForegroundColor Yellow
+
+            Write-Host "`n" -NoNewline
+            Write-Host "IMPORTANT: " -ForegroundColor Red -NoNewline
+            Write-Host "Save all open documents and close applications" -ForegroundColor Yellow
+            Write-Host ""
+            Write-StatusMessage "Before rebooting, please ensure:" "Warning"
+            Write-Host "  - All unsaved work is saved" -ForegroundColor White
+            Write-Host "  - All applications are closed" -ForegroundColor White
+            Write-Host "  - No critical processes are running" -ForegroundColor White
+            Write-Host ""
+
             Write-StatusMessage "`nThe script will automatically continue after restart." "Info"
             Write-StatusMessage "Setting up post-reboot continuation..." "Info"
 
             $scriptPath = $MyInvocation.MyCommand.Path
             Set-PostRebootContinuation -ScriptPath $scriptPath -Distribution $Distribution
 
-            Write-Host "`nRebooting in 15 seconds..." -ForegroundColor Yellow
+            Write-Host "`nRebooting in 30 seconds..." -ForegroundColor Yellow
             Write-Host "Press Ctrl+C to cancel..." -ForegroundColor Yellow
-            Start-Sleep -Seconds 15
+
+            for ($i = 30; $i -gt 0; $i--) {
+                Write-Host "`r$i seconds remaining... " -NoNewline -ForegroundColor Yellow
+                Start-Sleep -Seconds 1
+            }
+            Write-Host ""
 
             Restart-Computer -Force
         }

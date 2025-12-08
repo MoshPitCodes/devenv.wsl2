@@ -2,6 +2,14 @@
 # Kubernetes tools role - tasks
 # Installs Terraform, kubectl, and talosctl
 
+- name: Check disk space before Kubernetes tools installation
+  ansible.builtin.include_tasks:
+    file: "{{ playbook_dir }}/../roles/common/tasks/check_disk_space.yml"
+  vars:
+    required_space_mb: 300
+    check_path: "/tmp"
+  tags: always
+
 - name: Determine system architecture
   ansible.builtin.set_fact:
     system_arch: "{{ architecture_map[ansible_architecture] | default('amd64') }}"

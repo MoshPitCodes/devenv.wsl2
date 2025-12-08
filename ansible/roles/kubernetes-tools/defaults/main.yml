@@ -7,9 +7,9 @@ install_kubectl: true
 install_talosctl: true
 
 # Version specifications
-terraform_version: "1.10.3"
-kubectl_version: "1.32.0"
-talosctl_version: "1.9.2"
+terraform_version: "1.14.0"
+kubectl_version: "1.34.2"
+talosctl_version: "1.10.8"
 
 # Installation directory
 bin_directory: "/usr/local/bin"

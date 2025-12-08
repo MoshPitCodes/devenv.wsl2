@@ -25,6 +25,16 @@
       ansible.builtin.debug:
         msg: "Found SSH keys source directory: {{ ssh_keys_source }}"
 
+    - name: Log SSH key copy operation start
+      ansible.builtin.lineinfile:
+        path: "/var/log/ansible-security-audit.log"
+        line: "{{ ansible_date_time.iso8601 }} | SSH_KEY_COPY | user={{ target_user }} | source={{ ssh_keys_source }} | action=START | ansible_user={{ ansible_user_id }}"
+        create: true
+        mode: '0600'
+        owner: root
+        group: root
+      become: true
+
     - name: Create .ssh directory
       file:
         path: "/home/{{ target_user }}/.ssh"
@@ -262,6 +272,15 @@
         mode: '0644'
       when: ssh_agent_autoload_keys | default(true)
 
+    - name: Log SSH key copy operation completion
+      ansible.builtin.lineinfile:
+        path: "/var/log/ansible-security-audit.log"
+        line: "{{ ansible_date_time.iso8601 }} | SSH_KEY_COPY | user={{ target_user }} | action=COMPLETE | private_keys={{ private_keys.matched | default(0) }} | public_keys={{ public_keys.matched | default(0) }} | ansible_user={{ ansible_user_id }}"
+        mode: '0600'
+        owner: root
+        group: root
+      become: true
+
     - name: Display completion message
       ansible.builtin.debug:
         msg:
@@ -277,3 +296,5 @@
           - ""
           - "To activate ssh-agent now: source ~/.bashrc"
           - "Verify with: ssh-add -l"
+          - ""
+          - "AUDIT: Operation logged to /var/log/ansible-security-audit.log"

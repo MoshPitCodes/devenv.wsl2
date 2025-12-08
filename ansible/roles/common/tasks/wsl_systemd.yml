@@ -1,0 +1,125 @@
+---
+# WSL systemd configuration tasks
+# Configures systemd in WSL2 environments
+#
+# Usage:
+#   - ansible.builtin.include_tasks:
+#       file: wsl_systemd.yml
+#     when: wsl_enable_systemd | default(false)
+
+- name: Check if running in WSL
+  ansible.builtin.stat:
+    path: /proc/sys/fs/binfmt_misc/WSLInterop
+  register: wsl_check
+  tags: wsl
+
+- name: WSL systemd configuration block
+  when: wsl_check.stat.exists
+  tags: wsl
+  block:
+    - name: Get WSL version from kernel
+      ansible.builtin.shell: uname -r | grep -oP 'WSL\d+'
+      register: wsl_version_check
+      changed_when: false
+      failed_when: false
+
+    - name: Display WSL environment information
+      ansible.builtin.debug:
+        msg:
+          - "Detected WSL environment"
+          - "Kernel version: {{ ansible_kernel }}"
+          - "WSL version: {{ wsl_version_check.stdout | default('Unknown') }}"
+
+    - name: Check current systemd status in wsl.conf
+      ansible.builtin.shell: |
+        if [ -f /etc/wsl.conf ]; then
+          grep -A2 '\[boot\]' /etc/wsl.conf | grep 'systemd' || echo "not_configured"
+        else
+          echo "file_not_exists"
+        fi
+      register: current_systemd_config
+      changed_when: false
+
+    - name: Display current systemd configuration
+      ansible.builtin.debug:
+        msg: "Current systemd config: {{ current_systemd_config.stdout }}"
+
+    - name: Check if systemd is actually running
+      ansible.builtin.shell: |
+        if [ -d /run/systemd/system ]; then
+          echo "running"
+        else
+          echo "not_running"
+        fi
+      register: systemd_running
+      changed_when: false
+
+    - name: Backup existing wsl.conf
+      ansible.builtin.copy:
+        src: /etc/wsl.conf
+        dest: /etc/wsl.conf.backup
+        remote_src: true
+        mode: '0644'
+      when: current_systemd_config.stdout != "file_not_exists"
+
+    - name: Ensure /etc/wsl.conf exists with proper structure
+      ansible.builtin.blockinfile:
+        path: /etc/wsl.conf
+        marker: "# {mark} ANSIBLE MANAGED BOOT SECTION"
+        block: |
+          [boot]
+          systemd=true
+        create: true
+        mode: '0644'
+
+    - name: Verify wsl.conf syntax
+      ansible.builtin.shell: |
+        if [ -f /etc/wsl.conf ]; then
+          # Check for basic INI file syntax errors
+          if grep -qE '^\[.*\]$' /etc/wsl.conf; then
+            echo "valid"
+          else
+            echo "invalid"
+          fi
+        else
+          echo "missing"
+        fi
+      register: wsl_conf_validation
+      changed_when: false
+
+    - name: Assert wsl.conf is valid
+      ansible.builtin.assert:
+        that:
+          - wsl_conf_validation.stdout == "valid"
+        fail_msg: "wsl.conf validation failed. Please check the file syntax."
+        success_msg: "wsl.conf is valid"
+
+    - name: Display systemd activation notice
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "  WSL systemd Configuration Complete"
+          - "=========================================="
+          - ""
+          - "Current systemd status: {{ systemd_running.stdout }}"
+          - ""
+          - "IMPORTANT: To activate systemd, you must:"
+          - "  1. Exit all WSL sessions"
+          - "  2. From PowerShell/CMD run: wsl --shutdown"
+          - "  3. Wait 8 seconds for WSL to fully shutdown"
+          - "  4. Restart WSL: wsl"
+          - ""
+          - "Verify systemd is running with:"
+          - "  systemctl status"
+          - ""
+          - "Note: Windows 11 or Windows 10 with WSL 0.67.6+ is required"
+          - "Check WSL version with: wsl --version (in PowerShell)"
+
+    - name: Log systemd configuration change
+      ansible.builtin.lineinfile:
+        path: "/var/log/ansible-security-audit.log"
+        line: "{{ ansible_date_time.iso8601 }} | WSL_SYSTEMD_CONFIG | action=ENABLED | current_status={{ systemd_running.stdout }} | ansible_user={{ ansible_user_id }}"
+        create: true
+        mode: '0600'
+        owner: root
+        group: root
