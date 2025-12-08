@@ -34,23 +34,74 @@
     - terraform_installed is failed or (installed_terraform_version is defined and installed_terraform_version != terraform_version)
   tags: terraform
   block:
-    - name: Download Terraform
-      get_url:
+    - name: Download Terraform checksums
+      ansible.builtin.get_url:
+        url: "https://releases.hashicorp.com/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_SHA256SUMS"
+        dest: "/tmp/terraform_{{ terraform_version }}_SHA256SUMS"
+        mode: '0644'
+      register: terraform_checksum_download
+      retries: 3
+      delay: 5
+      until: terraform_checksum_download is succeeded
+
+    - name: Download Terraform checksums signature
+      ansible.builtin.get_url:
+        url: "https://releases.hashicorp.com/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_SHA256SUMS.sig"
+        dest: "/tmp/terraform_{{ terraform_version }}_SHA256SUMS.sig"
+        mode: '0644'
+      register: terraform_sig_download
+      retries: 3
+      delay: 5
+      until: terraform_sig_download is succeeded
+
+    - name: Import HashiCorp GPG key
+      ansible.builtin.shell: |
+        gpg --list-keys 34365D9472D7468F 2>/dev/null || \
+        curl -fsSL https://keybase.io/hashicorp/pgp_keys.asc | gpg --import
+      changed_when: false
+      register: hashicorp_gpg_import
+      retries: 3
+      delay: 5
+      until: hashicorp_gpg_import is succeeded
+
+    - name: Verify Terraform checksums signature
+      ansible.builtin.shell: |
+        gpg --verify /tmp/terraform_{{ terraform_version }}_SHA256SUMS.sig \
+                     /tmp/terraform_{{ terraform_version }}_SHA256SUMS
+      changed_when: false
+
+    - name: Download Terraform binary
+      ansible.builtin.get_url:
         url: "https://releases.hashicorp.com/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_linux_{{ system_arch }}.zip"
         dest: "/tmp/terraform_{{ terraform_version }}_linux_{{ system_arch }}.zip"
         mode: '0644'
+      register: terraform_download
+      retries: 3
+      delay: 5
+      until: terraform_download is succeeded
+
+    - name: Verify Terraform binary checksum
+      ansible.builtin.shell: |
+        cd /tmp
+        grep "terraform_{{ terraform_version }}_linux_{{ system_arch }}.zip" \
+             terraform_{{ terraform_version }}_SHA256SUMS | sha256sum -c -
+      changed_when: false
 
     - name: Unzip Terraform
-      unarchive:
+      ansible.builtin.unarchive:
         src: "/tmp/terraform_{{ terraform_version }}_linux_{{ system_arch }}.zip"
         dest: "{{ bin_directory }}"
         remote_src: true
         mode: '0755'
 
-    - name: Clean up Terraform zip file
-      file:
-        path: "/tmp/terraform_{{ terraform_version }}_linux_{{ system_arch }}.zip"
+    - name: Clean up Terraform files
+      ansible.builtin.file:
+        path: "{{ item }}"
         state: absent
+      loop:
+        - "/tmp/terraform_{{ terraform_version }}_linux_{{ system_arch }}.zip"
+        - "/tmp/terraform_{{ terraform_version }}_SHA256SUMS"
+        - "/tmp/terraform_{{ terraform_version }}_SHA256SUMS.sig"
 
 - name: Verify Terraform installation
   command: terraform version
@@ -159,11 +210,47 @@
     - talosctl_installed is failed or (installed_talosctl_version is defined and installed_talosctl_version != talosctl_version)
   tags: talosctl
   block:
-    - name: Download talosctl
-      get_url:
+    - name: Download talosctl checksums
+      ansible.builtin.get_url:
+        url: "https://github.com/siderolabs/talos/releases/download/v{{ talosctl_version }}/sha256sum.txt"
+        dest: "/tmp/talosctl_{{ talosctl_version }}_sha256sum.txt"
+        mode: '0644'
+      register: talosctl_checksum_download
+      retries: 3
+      delay: 5
+      until: talosctl_checksum_download is succeeded
+
+    - name: Download talosctl binary
+      ansible.builtin.get_url:
         url: "https://github.com/siderolabs/talos/releases/download/v{{ talosctl_version }}/talosctl-linux-{{ system_arch }}"
+        dest: "/tmp/talosctl-linux-{{ system_arch }}"
+        mode: '0755'
+      register: talosctl_download
+      retries: 3
+      delay: 5
+      until: talosctl_download is succeeded
+
+    - name: Verify talosctl checksum
+      ansible.builtin.shell: |
+        cd /tmp
+        grep "talosctl-linux-{{ system_arch }}" talosctl_{{ talosctl_version }}_sha256sum.txt | \
+        sha256sum -c -
+      changed_when: false
+
+    - name: Install verified talosctl
+      ansible.builtin.copy:
+        src: "/tmp/talosctl-linux-{{ system_arch }}"
         dest: "{{ bin_directory }}/talosctl"
         mode: '0755'
+        remote_src: true
+
+    - name: Clean up talosctl download files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/talosctl-linux-{{ system_arch }}"
+        - "/tmp/talosctl_{{ talosctl_version }}_sha256sum.txt"
 
 - name: Verify talosctl installation
   command: talosctl version --client

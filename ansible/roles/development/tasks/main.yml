@@ -77,34 +77,72 @@
   when: install_golang | default(false)
   tags: golang
 
-- name: Download Go
-  ansible.builtin.get_url:
-    url: "https://go.dev/dl/go{{ golang_version }}.linux-amd64.tar.gz"
-    dest: "/tmp/go{{ golang_version }}.linux-amd64.tar.gz"
-    mode: '0644'
+- name: Get installed Go version
+  ansible.builtin.command: /usr/local/go/bin/go version
+  register: current_go_version
+  changed_when: false
+  failed_when: false
   when:
     - install_golang | default(false)
-    - not go_installed.stat.exists
+    - go_installed.stat.exists | default(false)
   tags: golang
 
-- name: Remove old Go installation
-  ansible.builtin.file:
-    path: /usr/local/go
-    state: absent
-  when:
-    - install_golang | default(false)
-    - not go_installed.stat.exists
+- name: Set Go version needs update fact
+  ansible.builtin.set_fact:
+    go_needs_update: "{{ not go_installed.stat.exists | default(true) or (current_go_version.stdout is defined and ('go' + golang_version) not in current_go_version.stdout) }}"
+  when: install_golang | default(false)
   tags: golang
 
-- name: Extract Go archive
-  ansible.builtin.unarchive:
-    src: "/tmp/go{{ golang_version }}.linux-amd64.tar.gz"
-    dest: /usr/local
-    remote_src: true
+- name: Display Go version status
+  ansible.builtin.debug:
+    msg: "Go {{ golang_version }} {{ 'needs installation/update' if go_needs_update else 'is already installed' }}"
+  when: install_golang | default(false)
+  tags: golang
+
+- name: Go installation block
   when:
     - install_golang | default(false)
-    - not go_installed.stat.exists
+    - go_needs_update | default(true)
   tags: golang
+  block:
+    - name: Download Go
+      ansible.builtin.get_url:
+        url: "https://go.dev/dl/go{{ golang_version }}.linux-amd64.tar.gz"
+        dest: "/tmp/go{{ golang_version }}.linux-amd64.tar.gz"
+        mode: '0644'
+      register: go_download
+      retries: 3
+      delay: 5
+      until: go_download is succeeded
+
+    - name: Remove old Go installation
+      ansible.builtin.file:
+        path: /usr/local/go
+        state: absent
+
+    - name: Extract Go archive
+      ansible.builtin.unarchive:
+        src: "/tmp/go{{ golang_version }}.linux-amd64.tar.gz"
+        dest: /usr/local
+        remote_src: true
+
+    - name: Clean up Go archive
+      ansible.builtin.file:
+        path: "/tmp/go{{ golang_version }}.linux-amd64.tar.gz"
+        state: absent
+
+  rescue:
+    - name: Go installation failed - display error
+      ansible.builtin.debug:
+        msg: "Go installation failed. Please check network connectivity and try again."
+
+    - name: Clean up partial Go installation
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/tmp/go{{ golang_version }}.linux-amd64.tar.gz"
+      failed_when: false
 
 - name: Add Go to PATH
   ansible.builtin.blockinfile:
@@ -122,15 +160,32 @@
   when: install_golang | default(false)
   tags: golang
 
-- name: Install Rust via rustup
-  shell: |
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  args:
-    creates: "/home/{{ target_user }}/.cargo/bin/rustc"
-  become: true
-  become_user: "{{ target_user }}"
+- name: Rust installation block
   when: install_rust | default(false)
   tags: rust
+  block:
+    - name: Download rustup installer
+      ansible.builtin.get_url:
+        url: https://sh.rustup.rs
+        dest: /tmp/rustup-init.sh
+        mode: '0755'
+      register: rustup_download
+      retries: 3
+      delay: 5
+      until: rustup_download is succeeded
+
+    - name: Install Rust via rustup
+      ansible.builtin.shell: |
+        /tmp/rustup-init.sh -y --default-toolchain stable
+      args:
+        creates: "/home/{{ target_user }}/.cargo/bin/rustc"
+      become: true
+      become_user: "{{ target_user }}"
+
+    - name: Clean up rustup installer
+      ansible.builtin.file:
+        path: /tmp/rustup-init.sh
+        state: absent
 
 - name: Add Rust to PATH
   ansible.builtin.blockinfile:
@@ -189,7 +244,7 @@
   tags: doppler
   block:
     - name: Install prerequisites for Doppler
-      apt:
+      ansible.builtin.apt:
         name:
           - apt-transport-https
           - ca-certificates
@@ -197,24 +252,40 @@
           - gnupg
         state: present
 
-    - name: Add Doppler GPG key
-      apt_key:
+    - name: Download Doppler GPG key
+      ansible.builtin.get_url:
         url: https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key
-        keyring: /usr/share/keyrings/doppler-archive-keyring.gpg
-        state: present
+        dest: /tmp/doppler.gpg.asc
+        mode: '0644'
+      register: doppler_gpg_download
+      retries: 3
+      delay: 5
+      until: doppler_gpg_download is succeeded
+
+    - name: Dearmor and install Doppler GPG key
+      ansible.builtin.shell: |
+        gpg --dearmor < /tmp/doppler.gpg.asc > /usr/share/keyrings/doppler-archive-keyring.gpg
+        chmod 644 /usr/share/keyrings/doppler-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/doppler-archive-keyring.gpg
+
+    - name: Clean up temporary Doppler GPG key
+      ansible.builtin.file:
+        path: /tmp/doppler.gpg.asc
+        state: absent
 
     - name: Add Doppler repository
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main"
         filename: doppler-cli
         state: present
 
     - name: Update apt cache
-      apt:
+      ansible.builtin.apt:
         update_cache: true
 
     - name: Install Doppler CLI
-      apt:
+      ansible.builtin.apt:
         name: doppler
         state: present
 
@@ -255,19 +326,32 @@
         url: https://nixos.org/nix/install
         dest: /tmp/nix-install.sh
         mode: '0755'
+      register: nix_download
+      retries: 3
+      delay: 5
+      until: nix_download is succeeded
 
-    - name: Run Nix installer (multi-user mode)
+    - name: Run Nix installer (multi-user mode with no profile modification)
       ansible.builtin.shell: |
-        sh /tmp/nix-install.sh --daemon --yes
+        /tmp/nix-install.sh --daemon --yes --no-modify-profile
       args:
         creates: /nix/var/nix/profiles/default/bin/nix
-      environment:
-        NIX_INSTALLER_NO_MODIFY_PROFILE: "1"
 
     - name: Remove Nix installer script
       ansible.builtin.file:
         path: /tmp/nix-install.sh
         state: absent
+
+  rescue:
+    - name: Nix installation failed - display error
+      ansible.builtin.debug:
+        msg: "Nix installation failed. This may be due to missing systemd or other dependencies."
+
+    - name: Clean up partial Nix installation
+      ansible.builtin.file:
+        path: /tmp/nix-install.sh
+        state: absent
+      failed_when: false
 
 - name: Configure Nix for user
   ansible.builtin.blockinfile:
@@ -376,17 +460,27 @@
         state: directory
         mode: '0755'
 
-    - name: Add GitHub CLI GPG key
+    - name: Download GitHub CLI GPG key
+      ansible.builtin.get_url:
+        url: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+        dest: /tmp/githubcli-archive-keyring.gpg
+        mode: '0644'
+      register: gh_gpg_download
+      retries: 3
+      delay: 5
+      until: gh_gpg_download is succeeded
+
+    - name: Dearmor and install GitHub CLI GPG key
       ansible.builtin.shell: |
-        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | \
-        gpg --dearmor -o /etc/apt/keyrings/githubcli-archive-keyring.gpg
+        gpg --dearmor < /tmp/githubcli-archive-keyring.gpg > /etc/apt/keyrings/githubcli-archive-keyring.gpg
+        chmod 644 /etc/apt/keyrings/githubcli-archive-keyring.gpg
       args:
         creates: /etc/apt/keyrings/githubcli-archive-keyring.gpg
 
-    - name: Set permissions on GitHub CLI GPG key
+    - name: Clean up temporary GitHub CLI GPG key
       ansible.builtin.file:
-        path: /etc/apt/keyrings/githubcli-archive-keyring.gpg
-        mode: '0644'
+        path: /tmp/githubcli-archive-keyring.gpg
+        state: absent
 
     - name: Add GitHub CLI repository
       ansible.builtin.apt_repository:
@@ -394,26 +488,30 @@
         filename: github-cli
         state: present
 
-    - name: Download GitHub CLI deb package
-      ansible.builtin.get_url:
-        url: https://github.com/cli/cli/releases/download/v2.83.1/gh_2.83.1_linux_amd64.deb
-        dest: /tmp/gh.deb
-        mode: '0644'
-        timeout: 60
-      retries: 3
-      delay: 5
-
-    - name: Install GitHub CLI from deb package
+    - name: Update apt cache for GitHub CLI
       ansible.builtin.apt:
-        deb: /tmp/gh.deb
-        state: present
+        update_cache: true
+
+    - name: Install GitHub CLI from apt repository
+      ansible.builtin.apt:
+        name: gh
+        state: "{{ 'latest' if gh_cli_version | default('latest') == 'latest' else 'present' }}"
       environment:
         DEBIAN_FRONTEND: noninteractive
 
-    - name: Clean up deb package
+  rescue:
+    - name: GitHub CLI installation failed - display error
+      ansible.builtin.debug:
+        msg: "GitHub CLI installation failed. Please check network connectivity and try again."
+
+    - name: Clean up partial GitHub CLI installation
       ansible.builtin.file:
-        path: /tmp/gh.deb
+        path: "{{ item }}"
         state: absent
+      loop:
+        - /tmp/gh.deb
+        - /tmp/githubcli-archive-keyring.gpg
+      failed_when: false
 
 - name: Verify GitHub CLI installation
   ansible.builtin.command: gh --version

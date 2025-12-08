@@ -47,7 +47,7 @@
         dest: "/home/{{ target_user }}/.ssh/{{ item.path | basename }}"
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
-        mode: preserve
+        mode: '0600'  # Default to most restrictive, refined later
         remote_src: true
       loop: "{{ ssh_files_found.files }}"
       when:
@@ -61,7 +61,7 @@
         dest: "/home/{{ target_user }}/.ssh/{{ item }}"
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
-        mode: preserve
+        mode: '0600'  # Default to most restrictive, refined later
         remote_src: true
       loop: "{{ ssh_files_to_copy }}"
       when: ssh_files_to_copy | length > 0
@@ -149,26 +149,61 @@
         path: "/home/{{ target_user }}/.bashrc"
         marker: "# {mark} ANSIBLE MANAGED SSH AGENT"
         block: |
-          # SSH Agent configuration
+          # SSH Agent configuration - with race condition protection
           SSH_ENV="$HOME/.ssh/agent-environment"
+          SSH_LOCK="$HOME/.ssh/.agent-lock"
+
+          function cleanup_stale_agents {
+              # Clean up any orphaned ssh-agent processes
+              local stale_agents
+              stale_agents=$(pgrep -u "$USER" ssh-agent 2>/dev/null | head -5)
+              if [ -n "$stale_agents" ]; then
+                  for pid in $stale_agents; do
+                      # Check if this agent has a valid socket
+                      if ! [ -S "/tmp/ssh-"*"/agent.$pid" ] 2>/dev/null; then
+                          kill "$pid" 2>/dev/null || true
+                      fi
+                  done
+              fi
+          }
 
           function start_agent {
+              # Use lock file to prevent race conditions
+              exec 200>"$SSH_LOCK"
+              if ! flock -n 200; then
+                  # Another process is starting the agent, wait and source
+                  sleep 1
+                  [ -f "$SSH_ENV" ] && . "$SSH_ENV" > /dev/null
+                  return
+              fi
+
+              # Clean up stale agents first
+              cleanup_stale_agents
+
               echo "Initializing new SSH agent..."
               /usr/bin/ssh-agent | sed 's/^echo/#echo/' > "${SSH_ENV}"
-              echo "succeeded"
               chmod 600 "${SSH_ENV}"
               . "${SSH_ENV}" > /dev/null
+
+              # Release lock
+              flock -u 200
+          }
+
+          function agent_is_running {
+              # Safely check if the agent is running
+              [ -n "${SSH_AGENT_PID:-}" ] && \
+              [ -S "${SSH_AUTH_SOCK:-}" ] && \
+              kill -0 "$SSH_AGENT_PID" 2>/dev/null
           }
 
           # Source SSH settings, if applicable
           if [ -f "${SSH_ENV}" ]; then
               . "${SSH_ENV}" > /dev/null
-              #ps ${SSH_AGENT_PID} doesn't work under cywgin
-              ps -ef | grep ${SSH_AGENT_PID} | grep ssh-agent$ > /dev/null || {
-                  start_agent;
-              }
+              if ! agent_is_running; then
+                  start_agent
+              fi
           else
-              start_agent;
+              start_agent
           fi
         create: true
         owner: "{{ target_user }}"

@@ -63,3 +63,5 @@ ansible/vars/user_environment.yml
 ansible/ansible.cfg
 docs
 CLAUDE.md
+.claude/
+ansible/vars/user_environment.yml

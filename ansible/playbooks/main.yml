@@ -14,11 +14,22 @@
   hosts: local
   become: true
   gather_facts: true
+  # Limit max_fail_percentage to catch errors early
+  max_fail_percentage: 0
 
   vars_files:
     - ../vars/user_environment.yml
 
   pre_tasks:
+    - name: Validate required variables
+      ansible.builtin.assert:
+        that:
+          - target_user is defined
+          - target_user | length > 0
+        fail_msg: "target_user must be defined in vars/user_environment.yml"
+        success_msg: "Required variables validated"
+      tags: always
+
     - name: Display environment information
       ansible.builtin.debug:
         msg:
@@ -28,6 +39,21 @@
           - "OS: {{ ansible_distribution }} {{ ansible_distribution_version }}"
       tags: always
 
+    - name: Check network connectivity
+      ansible.builtin.uri:
+        url: https://www.google.com
+        timeout: 10
+      register: connectivity_check
+      failed_when: false
+      changed_when: false
+      tags: always
+
+    - name: Warn if no network connectivity
+      ansible.builtin.debug:
+        msg: "WARNING: No internet connectivity detected. Some installations may fail."
+      when: connectivity_check.status is not defined or connectivity_check.status != 200
+      tags: always
+
     - name: Update apt cache
       ansible.builtin.apt:
         update_cache: true
@@ -35,29 +61,36 @@
       tags: always
 
   roles:
+    # Common role with rollback support
     - role: common
       tags: common
 
+    # SSH keys with rollback support
     - role: ssh-keys
       tags: ssh
       when: copy_ssh_keys | default(false)
 
+    # GPG keys with rollback support
     - role: gpg-keys
       tags: gpg
       when: copy_gpg_keys | default(false)
 
+    # Development tools with rollback support
     - role: development
       tags: development
       when: install_development_tools | default(true)
 
+    # Kubernetes tools with rollback support
     - role: kubernetes-tools
       tags: kubernetes
       when: install_kubernetes_tools | default(false)
 
+    # Docker with rollback support
     - role: docker
       tags: docker
       when: install_docker | default(false)
 
+    # AI tools with rollback support
     - role: ai-tools
       tags: ai-tools
       when: install_ai_tools | default(false)
@@ -67,6 +100,19 @@
       ansible.builtin.apt:
         autoclean: true
         autoremove: true
+      tags: cleanup
+
+    - name: Clean up temporary files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/rustup-init.sh
+        - /tmp/nix-install.sh
+        - /tmp/gh.deb
+        - /tmp/docker.gpg.asc
+        - /tmp/doppler.gpg.asc
+      failed_when: false
       tags: cleanup
 
     - name: Display completion message

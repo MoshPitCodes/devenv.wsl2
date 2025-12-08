@@ -29,3 +29,5 @@ install_rust: false
 install_ruby: false
 install_nix: false
 install_gh_cli: false
+gh_cli_version: "latest"
+install_doppler: false

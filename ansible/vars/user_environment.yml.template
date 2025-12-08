@@ -1,8 +1,13 @@
 ---
-# User Environment Configuration Variables
+# User Environment Configuration Variables Template
 #
-# Customize this file to match your preferences and requirements.
-# After making changes, re-run the main playbook:
+# INSTRUCTIONS:
+# 1. Copy this file to user_environment.yml:
+#    cp user_environment.yml.template user_environment.yml
+# 2. Update all placeholder values (marked with YOUR_*)
+# 3. DO NOT commit user_environment.yml to version control
+#
+# After customizing, run the main playbook:
 #   ansible-playbook -K playbooks/main.yml
 
 # ============================================================================
@@ -10,13 +15,13 @@
 # ============================================================================
 
 # Primary user for the environment
-target_user: testuser
+target_user: YOUR_USERNAME  # Replace with your Linux username
 
 # User's email (used for git config, etc.)
-user_email: your.email@example.com
+user_email: YOUR_EMAIL@example.com  # Replace with your email address
 
 # User's full name (used for git config)
-user_full_name: Your Name
+user_full_name: YOUR_FULL_NAME  # Replace with your full name
 
 # Default shell (bash, zsh, fish)
 user_shell: /bin/bash
@@ -53,7 +58,10 @@ install_kubernetes_tools: true
 install_doppler: true
 
 # Install Nix package manager
-install_nix: false
+install_nix: true
+
+# Install GitHub CLI (gh)
+install_gh_cli: true
 
 # Install AI-powered CLI tools (Gemini, Claude Code, Opencode)
 install_ai_tools: true
@@ -64,7 +72,7 @@ install_ai_tools: true
 
 # Node.js version (from NodeSource)
 # Options: 18, 20, 21, etc.
-nodejs_version: "24.11.1"
+nodejs_version: "25.2.1"
 
 # Python version (in addition to system python3)
 # Leave empty to use system default
@@ -80,9 +88,9 @@ rust_install_method: "rustup"
 docker_compose_version: "2.40.3"
 
 # Kubernetes tools versions
-terraform_version: "1.13.5"
-kubectl_version: "1.32.0"
-talosctl_version: "1.9.2"
+terraform_version: "1.14.0"
+kubectl_version: "1.34.2"
+talosctl_version: "1.10.8"
 
 # Individual tool toggles (if install_kubernetes_tools is true)
 install_terraform: true
@@ -94,9 +102,9 @@ install_talosctl: true
 # ============================================================================
 
 # Individual AI tool toggles (if install_ai_tools is true)
-install_gemini_cli: true
-install_claude_code: true
-install_opencode: true
+install_gemini_cli: false
+install_claude_code: false
+install_opencode: false
 
 # Gemini CLI version (latest, preview, or nightly)
 gemini_cli_version: "latest"
@@ -297,13 +305,15 @@ ssh_agent_autostart: true
 ssh_agent_autoload_keys: true
 
 # Source directory for SSH keys (Windows/WSL mount path)
-ssh_keys_source: "/path/to/SSH/source"
+# Update with your actual path
+ssh_keys_source: "/mnt/YOUR_DRIVE/path/to/your/.ssh"
 
 # Enable GPG key copying from backup location
 copy_gpg_keys: true
 
 # Source directory for GPG keys (Windows/WSL mount path)
-gpg_keys_source: "/path/to/GPG/source"
+# Update with your actual path
+gpg_keys_source: "/mnt/YOUR_DRIVE/path/to/your/.gnupg"
 
 # Enable GPG agent SSH support (allows using GPG keys for SSH)
 gpg_enable_ssh_support: false
@@ -322,13 +332,15 @@ ssh_config_mode: "0600"
 
 # Files to copy (can be customized)
 # Leave empty to copy all files from source directory
-ssh_files_to_copy: [
-
-]
+ssh_files_to_copy: []
+  # Specify which SSH files to copy, or leave empty to copy all
+  # Example files (uncomment and customize as needed):
   # - id_rsa
   # - id_rsa.pub
   # - id_ed25519
   # - id_ed25519.pub
+  # - id_ed25519_github
+  # - id_ed25519_github.pub
   # - config
   # - known_hosts
 
