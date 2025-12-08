@@ -9,6 +9,7 @@
 
 set -e  # Exit on any error
 set -u  # Exit on undefined variable
+set -o pipefail  # Exit on pipe failures
 
 # Colors for output
 RED='\033[0;31m'
@@ -151,18 +152,38 @@ install_python_deps() {
     log_info "Installing Python packages from apt: ${apt_packages[*]}"
     sudo apt install -y "${apt_packages[@]}" 2>/dev/null || log_warning "Some apt packages not available"
 
-    # For packages not available via apt, use pip with --break-system-packages
-    # This is safe for user-space tools like ansible-lint and yamllint
-    local pip_packages=(
+    # For packages not available via apt, use pipx (PEP 668 compliant)
+    # pipx installs packages in isolated environments, avoiding system package conflicts
+    local pipx_packages=(
         ansible-lint
         yamllint
     )
 
-    log_info "Installing Python packages via pip: ${pip_packages[*]}"
+    # Check if pipx is available, install if not
+    if ! command -v pipx &> /dev/null; then
+        log_info "Installing pipx for isolated package management..."
+        sudo apt install -y pipx 2>/dev/null || {
+            log_warning "pipx not available via apt, falling back to pip"
+            pip3 install --user --break-system-packages pipx
+        }
+        # Ensure pipx bin directory is in PATH
+        pipx ensurepath 2>/dev/null || true
+    fi
 
-    # Try installing to user space with break-system-packages flag
-    # This is necessary on Ubuntu 24.04+ due to PEP 668
-    pip3 install --user --break-system-packages --upgrade "${pip_packages[@]}"
+    log_info "Installing Python packages via pipx: ${pipx_packages[*]}"
+
+    for pkg in "${pipx_packages[@]}"; do
+        if command -v pipx &> /dev/null; then
+            # Use pipx for isolated installation (preferred)
+            pipx install "$pkg" 2>/dev/null || pipx upgrade "$pkg" 2>/dev/null || {
+                log_warning "pipx install failed for $pkg, trying pip fallback"
+                pip3 install --user --break-system-packages --upgrade "$pkg"
+            }
+        else
+            # Fallback to pip with --break-system-packages (Ubuntu 24.04+)
+            pip3 install --user --break-system-packages --upgrade "$pkg"
+        fi
+    done
 
     log_success "Python dependencies installed"
 }

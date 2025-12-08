@@ -2,6 +2,12 @@
 name: PowerShell Linting
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'powershell/**'
+      - '.github/workflows/powershell-lint.yml'
+      - 'PSScriptAnalyzerSettings.psd1'
   workflow_dispatch:
 
 jobs:

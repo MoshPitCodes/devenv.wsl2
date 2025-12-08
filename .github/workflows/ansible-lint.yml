@@ -2,6 +2,11 @@
 name: Ansible Linting
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ansible/**'
+      - '.github/workflows/ansible-lint.yml'
   workflow_dispatch:
 
 jobs:

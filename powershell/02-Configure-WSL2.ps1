@@ -38,12 +38,59 @@
 
 [CmdletBinding()]
 param(
+    [ValidatePattern('^[0-9]+[GM]B$', ErrorMessage = "Memory must be in format like '4GB' or '512MB'")]
     [string]$Memory = "4GB",
+
+    [ValidateRange(1, 128)]
     [int]$Processors = 2,
+
+    [ValidatePattern('^[0-9]+[GM]B$', ErrorMessage = "Swap must be in format like '1GB' or '512MB'")]
     [string]$Swap = "1GB",
+
     [bool]$LocalhostForwarding = $true,
     [switch]$Force
 )
+
+# Additional runtime validation
+function Test-ConfigurationParameters {
+    param(
+        [string]$Memory,
+        [int]$Processors,
+        [string]$Swap
+    )
+
+    $resources = Get-SystemResources
+    $errors = @()
+
+    # Validate processor count against system
+    if ($Processors -gt $resources.LogicalProcessors) {
+        $errors += "Requested $Processors processors but system only has $($resources.LogicalProcessors)"
+    }
+
+    # Parse and validate memory
+    $memValue = [int]($Memory -replace '[^0-9]', '')
+    $memUnit = $Memory -replace '[0-9]', ''
+    $memGB = if ($memUnit -eq 'MB') { $memValue / 1024 } else { $memValue }
+
+    if ($memGB -gt $resources.TotalMemoryGB) {
+        $errors += "Requested ${Memory} but system only has $($resources.TotalMemoryGB)GB total"
+    }
+
+    if ($memGB -gt ($resources.TotalMemoryGB * 0.9)) {
+        Write-StatusMessage "Warning: Allocating more than 90% of system RAM to WSL2" "Warning"
+    }
+
+    # Parse and validate swap
+    $swapValue = [int]($Swap -replace '[^0-9]', '')
+    $swapUnit = $Swap -replace '[0-9]', ''
+    $swapGB = if ($swapUnit -eq 'MB') { $swapValue / 1024 } else { $swapValue }
+
+    if ($swapGB -gt 32) {
+        Write-StatusMessage "Warning: Swap size of ${Swap} is unusually large" "Warning"
+    }
+
+    return $errors
+}
 
 function Write-StatusMessage {
     param([string]$Message, [string]$Level = "Info")
@@ -212,6 +259,29 @@ try {
 
     # Show system resources
     Show-Recommendations
+
+    # Validate parameters against system resources
+    Write-StatusMessage "Validating configuration parameters..." "Info"
+    $validationErrors = Test-ConfigurationParameters -Memory $Memory -Processors $Processors -Swap $Swap
+
+    if ($validationErrors.Count -gt 0) {
+        Write-StatusMessage "Configuration validation errors:" "Error"
+        foreach ($err in $validationErrors) {
+            Write-StatusMessage "  - $err" "Error"
+        }
+
+        if (-not $Force) {
+            $response = Read-Host "`nContinue anyway? (y/N)"
+            if ($response -ne 'y' -and $response -ne 'Y') {
+                Write-StatusMessage "Configuration cancelled due to validation errors" "Warning"
+                exit 1
+            }
+        } else {
+            Write-StatusMessage "Continuing despite errors due to -Force flag" "Warning"
+        }
+    } else {
+        Write-StatusMessage "Configuration parameters validated" "Success"
+    }
 
     # Configuration file path
     $configPath = "$env:USERPROFILE\.wslconfig"

@@ -2,6 +2,12 @@
 name: WSL2 Integration Tests
 
 on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ansible/**'
+      - 'powershell/**'
+      - '.github/workflows/wsl2-test.yml'
   workflow_dispatch:
 
 jobs:
