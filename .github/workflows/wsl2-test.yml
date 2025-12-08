@@ -2,12 +2,21 @@
 name: WSL2 Integration Tests
 
 on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'ansible/**'
+      - 'powershell/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [main]
     paths:
       - 'ansible/**'
       - 'powershell/**'
-      - '.github/workflows/wsl2-test.yml'
+      - '.github/workflows/**'
+  schedule:
+    # Run weekly on Monday at 00:00 UTC to catch dependency issues
+    - cron: '0 0 * * 1'
   workflow_dispatch:
 
 jobs:

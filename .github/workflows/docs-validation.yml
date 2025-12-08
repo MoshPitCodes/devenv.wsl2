@@ -2,6 +2,13 @@
 name: Documentation Validation
 
 on:
+  push:
+    branches: [main, develop]
+    paths:
+      - '**/*.md'
+      - '.github/workflows/docs-validation.yml'
+      - '.markdownlint.json'
+      - '.markdown-link-check.json'
   pull_request:
     branches: [main]
     paths:

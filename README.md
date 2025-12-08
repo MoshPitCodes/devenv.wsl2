@@ -414,6 +414,64 @@ cd ~/development/moshpitcodes.wsl/ansible
 # - GPG keys status
 ```
 
+## Operational Tools
+
+### Performance Benchmarking
+
+Track playbook performance and identify bottlenecks:
+
+```bash
+cd ~/development/moshpitcodes.wsl/ansible
+
+# Benchmark in check mode (safe, dry-run)
+./benchmark.sh
+
+# Benchmark with real execution (makes actual changes)
+./benchmark.sh --real-run
+
+# Benchmark specific playbook
+./benchmark.sh --playbook playbooks/ssh-keys.yml
+
+# View benchmark history
+ls -lh ~/.ansible-benchmarks/
+cat ~/.ansible-benchmarks/results-*.txt
+
+# Features:
+# - Task-by-task timing breakdown
+# - System information capture
+# - Historical comparison with previous runs
+# - Performance improvement/degradation metrics
+# - Automatic cleanup (keeps last 10 runs)
+```
+
+### Update Notifications
+
+Check for repository updates and new features:
+
+```bash
+cd ~/development/moshpitcodes.wsl/ansible
+
+# Automatic check (respects 7-day interval)
+./check-updates.sh
+
+# Force immediate check
+./check-updates.sh --force
+
+# Verbose output
+./check-updates.sh --verbose
+
+# Custom check interval (3 days)
+./check-updates.sh --interval 3
+
+# Exit codes:
+# 0 - No updates available
+# 1 - Error occurred
+# 2 - Updates available
+
+# The bootstrap script automatically checks for updates
+# Update checks are smart and respect intervals to minimize network overhead
+```
+
 <br/>
 
 # 🛠️ **Troubleshooting**

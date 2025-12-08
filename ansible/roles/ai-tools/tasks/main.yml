@@ -154,13 +154,28 @@
       - opencode_installed is failed
   tags: opencode
   block:
-      - name: Download and execute Opencode install script
-        shell: |
-            curl -fsSL {{ opencode_install_script }} | bash
+      - name: Download Opencode install script
+        ansible.builtin.get_url:
+            url: '{{ opencode_install_script }}'
+            dest: /tmp/opencode-install.sh
+            mode: '0755'
+        register: opencode_script_download
+        retries: 3
+        delay: 5
+        until: opencode_script_download is succeeded
+
+      - name: Execute Opencode install script
+        ansible.builtin.shell: |
+            bash /tmp/opencode-install.sh
         become: true
         become_user: '{{ target_user }}'
         args:
             creates: '/home/{{ target_user }}/.opencode/bin/opencode'
+
+      - name: Clean up Opencode install script
+        ansible.builtin.file:
+            path: /tmp/opencode-install.sh
+            state: absent
 
 - name: Check if Opencode is now installed (in user home)
   ansible.builtin.stat:

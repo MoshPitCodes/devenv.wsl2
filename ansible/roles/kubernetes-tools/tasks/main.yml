@@ -62,15 +62,35 @@
       delay: 5
       until: terraform_sig_download is succeeded
 
-    - name: Import HashiCorp GPG key
+    - name: Check if HashiCorp GPG key is already imported
       ansible.builtin.shell: |
-        gpg --list-keys 34365D9472D7468F 2>/dev/null || \
-        curl -fsSL https://keybase.io/hashicorp/pgp_keys.asc | gpg --import
+        gpg --list-keys 34365D9472D7468F 2>/dev/null
+      register: hashicorp_key_check
       changed_when: false
-      register: hashicorp_gpg_import
+      failed_when: false
+
+    - name: Download HashiCorp GPG key
+      ansible.builtin.get_url:
+        url: https://keybase.io/hashicorp/pgp_keys.asc
+        dest: /tmp/hashicorp_gpg.asc
+        mode: '0644'
+      when: hashicorp_key_check.rc != 0
+      register: hashicorp_gpg_download
       retries: 3
       delay: 5
-      until: hashicorp_gpg_import is succeeded
+      until: hashicorp_gpg_download is succeeded
+
+    - name: Import HashiCorp GPG key
+      ansible.builtin.shell: |
+        gpg --import /tmp/hashicorp_gpg.asc
+      when: hashicorp_key_check.rc != 0
+      changed_when: false
+
+    - name: Clean up HashiCorp GPG key file
+      ansible.builtin.file:
+        path: /tmp/hashicorp_gpg.asc
+        state: absent
+      when: hashicorp_key_check.rc != 0
 
     - name: Verify Terraform checksums signature
       ansible.builtin.shell: |

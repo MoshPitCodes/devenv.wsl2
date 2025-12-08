@@ -270,6 +270,22 @@ setup_directories() {
     log_success "Directories ready"
 }
 
+# Check for repository updates
+check_for_updates() {
+    log_step "Checking for repository updates..."
+
+    if [[ -x "check-updates.sh" ]]; then
+        ./check-updates.sh --force --verbose || {
+            local exit_code=$?
+            if [[ $exit_code -eq 2 ]]; then
+                log_warning "Updates are available for this repository"
+            fi
+        }
+    else
+        log_info "Update check script not found, skipping..."
+    fi
+}
+
 # Display completion message
 show_completion() {
     echo ""
@@ -299,6 +315,8 @@ show_completion() {
     echo "  Dry run:             ansible-playbook --check <playbook.yml>"
     echo "  Lint playbook:       ansible-lint <playbook.yml>"
     echo "  Lint YAML:           yamllint <file.yml>"
+    echo "  Benchmark playbook:  ./benchmark.sh [--real-run]"
+    echo "  Check updates:       ./check-updates.sh [--force]"
     echo ""
 }
 
@@ -324,6 +342,9 @@ main() {
     configure_path
     setup_directories
     verify_installation
+
+    # Check for updates
+    check_for_updates
 
     # Show completion message
     show_completion
