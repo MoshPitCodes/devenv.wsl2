@@ -7,7 +7,7 @@
 # and all dependencies are installed.
 #
 
-set -u
+set -euo pipefail
 
 # Colors
 GREEN='\033[0;32m'
@@ -40,6 +40,9 @@ check_warn() {
 section() {
     echo -e "\n${BLUE}==>${NC} $1"
 }
+
+# Error handling
+trap 'echo -e "${RED}Error at line $LINENO${NC}"; exit 1' ERR
 
 # Header
 echo -e "${BLUE}========================================${NC}"

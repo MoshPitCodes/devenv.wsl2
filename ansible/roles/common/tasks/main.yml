@@ -22,32 +22,10 @@
   when: extra_packages is defined and extra_packages | length > 0
   tags: packages
 
-- name: Flatten git_config dictionary
-  ansible.builtin.set_fact:
-    git_config_flat: >-
-      {%- set result = {} -%}
-      {%- for section, settings in git_config.items() -%}
-        {%- if settings is mapping -%}
-          {%- for key, value in settings.items() -%}
-            {%- set _ = result.update({section ~ '.' ~ key: value}) -%}
-          {%- endfor -%}
-        {%- else -%}
-          {%- set _ = result.update({section: settings}) -%}
-        {%- endif -%}
-      {%- endfor -%}
-      {{ result }}
-  when: git_config is defined
-  tags: git
-
-- name: Configure git settings
-  community.general.git_config:
-    name: "{{ item.key }}"
-    value: "{{ item.value | string }}"
-    scope: global
-  loop: "{{ git_config_flat | default({}) | dict2items }}"
-  become: true
-  become_user: "{{ target_user }}"
-  when: git_config_flat is defined and git_config_flat | length > 0
+- name: Configure git settings with backup and merge
+  ansible.builtin.include_tasks:
+    file: git_config.yml
+  when: git_config is defined and git_config | length > 0
   tags: git
 
 - name: Create bash aliases
@@ -113,3 +91,9 @@
     name: "{{ target_user }}"
     shell: "{{ user_shell }}"
   tags: shell
+
+- name: Configure WSL systemd if enabled
+  ansible.builtin.include_tasks:
+    file: wsl_systemd.yml
+  when: wsl_enable_systemd | default(false)
+  tags: wsl

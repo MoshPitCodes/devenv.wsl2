@@ -2,6 +2,14 @@
 # Docker role - tasks
 # Installs and configures Docker and Docker Compose
 
+- name: Check disk space before Docker installation
+  ansible.builtin.include_tasks:
+    file: "{{ playbook_dir }}/../roles/common/tasks/check_disk_space.yml"
+  vars:
+    required_space_mb: 1000
+    check_path: "/var/lib"
+  tags: docker
+
 - name: Install prerequisites for Docker
   ansible.builtin.apt:
     name:

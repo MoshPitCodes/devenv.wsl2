@@ -1,0 +1,36 @@
+---
+# Common disk space check tasks
+# Can be included by roles that download large files
+#
+# Usage:
+#   - name: Check disk space before download
+#     ansible.builtin.include_tasks:
+#       file: "{{ playbook_dir }}/../roles/common/tasks/check_disk_space.yml"
+#     vars:
+#       required_space_mb: 500
+#       check_path: "/tmp"
+
+- name: Get filesystem information for path
+  ansible.builtin.shell: |
+    df -BM "{{ check_path | default('/tmp') }}" | tail -1 | awk '{print $4}' | sed 's/M//'
+  register: available_space
+  changed_when: false
+  tags: always
+
+- name: Display available disk space
+  ansible.builtin.debug:
+    msg: "Available space at {{ check_path | default('/tmp') }}: {{ available_space.stdout }} MB"
+  tags: always
+
+- name: Check if sufficient disk space is available
+  ansible.builtin.assert:
+    that:
+      - available_space.stdout | int > (required_space_mb | default(200))
+    fail_msg: |
+      Insufficient disk space!
+      Available: {{ available_space.stdout }} MB
+      Required: {{ required_space_mb | default(200) }} MB
+      Path: {{ check_path | default('/tmp') }}
+      Please free up disk space before continuing.
+    success_msg: "Disk space check passed: {{ available_space.stdout }} MB available"
+  tags: always
