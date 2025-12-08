@@ -122,15 +122,32 @@
   when: install_golang | default(false)
   tags: golang
 
-- name: Install Rust via rustup
-  shell: |
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  args:
-    creates: "/home/{{ target_user }}/.cargo/bin/rustc"
-  become: true
-  become_user: "{{ target_user }}"
+- name: Rust installation block
   when: install_rust | default(false)
   tags: rust
+  block:
+    - name: Download rustup installer
+      ansible.builtin.get_url:
+        url: https://sh.rustup.rs
+        dest: /tmp/rustup-init.sh
+        mode: '0755'
+      register: rustup_download
+      retries: 3
+      delay: 5
+      until: rustup_download is succeeded
+
+    - name: Install Rust via rustup
+      ansible.builtin.shell: |
+        /tmp/rustup-init.sh -y --default-toolchain stable
+      args:
+        creates: "/home/{{ target_user }}/.cargo/bin/rustc"
+      become: true
+      become_user: "{{ target_user }}"
+
+    - name: Clean up rustup installer
+      ansible.builtin.file:
+        path: /tmp/rustup-init.sh
+        state: absent
 
 - name: Add Rust to PATH
   ansible.builtin.blockinfile:
@@ -189,7 +206,7 @@
   tags: doppler
   block:
     - name: Install prerequisites for Doppler
-      apt:
+      ansible.builtin.apt:
         name:
           - apt-transport-https
           - ca-certificates
@@ -197,24 +214,40 @@
           - gnupg
         state: present
 
-    - name: Add Doppler GPG key
-      apt_key:
+    - name: Download Doppler GPG key
+      ansible.builtin.get_url:
         url: https://packages.doppler.com/public/cli/gpg.DE2A7741A397C129.key
-        keyring: /usr/share/keyrings/doppler-archive-keyring.gpg
-        state: present
+        dest: /tmp/doppler.gpg.asc
+        mode: '0644'
+      register: doppler_gpg_download
+      retries: 3
+      delay: 5
+      until: doppler_gpg_download is succeeded
+
+    - name: Dearmor and install Doppler GPG key
+      ansible.builtin.shell: |
+        gpg --dearmor < /tmp/doppler.gpg.asc > /usr/share/keyrings/doppler-archive-keyring.gpg
+        chmod 644 /usr/share/keyrings/doppler-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/doppler-archive-keyring.gpg
+
+    - name: Clean up temporary Doppler GPG key
+      ansible.builtin.file:
+        path: /tmp/doppler.gpg.asc
+        state: absent
 
     - name: Add Doppler repository
-      apt_repository:
+      ansible.builtin.apt_repository:
         repo: "deb [signed-by=/usr/share/keyrings/doppler-archive-keyring.gpg] https://packages.doppler.com/public/cli/deb/debian any-version main"
         filename: doppler-cli
         state: present
 
     - name: Update apt cache
-      apt:
+      ansible.builtin.apt:
         update_cache: true
 
     - name: Install Doppler CLI
-      apt:
+      ansible.builtin.apt:
         name: doppler
         state: present
 
@@ -255,10 +288,14 @@
         url: https://nixos.org/nix/install
         dest: /tmp/nix-install.sh
         mode: '0755'
+      register: nix_download
+      retries: 3
+      delay: 5
+      until: nix_download is succeeded
 
     - name: Run Nix installer (multi-user mode)
       ansible.builtin.shell: |
-        sh /tmp/nix-install.sh --daemon --yes
+        /tmp/nix-install.sh --daemon --yes
       args:
         creates: /nix/var/nix/profiles/default/bin/nix
       environment:

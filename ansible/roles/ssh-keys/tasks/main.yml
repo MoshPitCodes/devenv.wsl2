@@ -47,7 +47,7 @@
         dest: "/home/{{ target_user }}/.ssh/{{ item.path | basename }}"
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
-        mode: preserve
+        mode: '0600'  # Default to most restrictive, refined later
         remote_src: true
       loop: "{{ ssh_files_found.files }}"
       when:
@@ -61,7 +61,7 @@
         dest: "/home/{{ target_user }}/.ssh/{{ item }}"
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
-        mode: preserve
+        mode: '0600'  # Default to most restrictive, refined later
         remote_src: true
       loop: "{{ ssh_files_to_copy }}"
       when: ssh_files_to_copy | length > 0

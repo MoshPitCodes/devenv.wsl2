@@ -43,6 +43,7 @@
     - name: Copy entire .gnupg directory from source using rsync
       shell: |
         rsync -a --chown={{ target_user }}:{{ target_user }} \
+          --chmod=D700,F600 \
           --exclude='*.lock' \
           --exclude='*.tmp' \
           --exclude='S.gpg-agent*' \
