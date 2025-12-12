@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-> **Note:** This guide uses `~/development/devenv.wsl2` as an example path. You can clone the repository to any location you prefer - just adjust the paths accordingly throughout the guide.
+> **Note:** This guide uses `~/development/moshpitcodes.wsl` as an example path. You can clone the repository to any location you prefer - just adjust the paths accordingly throughout the guide.
 
 ## Initial Setup (Windows PowerShell as Administrator)
 
@@ -16,8 +16,8 @@
 # 3. Clone/Access the repository in WSL, then bootstrap Ansible
 wsl
 cd ~/development  # or your preferred location
-git clone <your-repo-url> devenv.wsl2
-cd devenv.wsl2/ansible
+git clone <your-repo-url> moshpitcodes.wsl
+cd moshpitcodes.wsl/ansible
 
 # First-time setup: Copy configuration from templates
 cp ansible.cfg.template ansible.cfg
@@ -34,7 +34,7 @@ nano vars/user_environment.yml
 
 ```bash
 # Edit configuration
-cd ~/development/devenv.wsl2/ansible  # or your repository location
+cd ~/development/moshpitcodes.wsl/ansible  # or your repository location
 nano vars/user_environment.yml
 
 # Apply changes
@@ -65,7 +65,7 @@ wsl --status                 # Check WSL status
 
 ```bash
 # Ansible
-cd ~/development/devenv.wsl2/ansible  # or your repository location
+cd ~/development/moshpitcodes.wsl/ansible  # or your repository location
 ansible-playbook -K playbooks/main.yml                    # Run main playbook
 ansible-playbook --check playbooks/main.yml               # Dry run
 ansible-playbook -K --tags "ssh" playbooks/main.yml       # Copy SSH keys only
