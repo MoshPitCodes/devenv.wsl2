@@ -9,16 +9,16 @@
    <div align="center">
       <p></p>
       <div align="center">
-         <a href="https://github.com/MoshPitCodes/devenv.wsl2/stargazers">
-            <img src="https://img.shields.io/github/stars/MoshPitCodes/devenv.wsl2?color=FABD2F&labelColor=282828&style=for-the-badge&logo=starship&logoColor=FABD2F" alt="GitHub Stars">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/stargazers">
+            <img src="https://img.shields.io/github/stars/MoshPitCodes/moshpitcodes.wsl?color=FABD2F&labelColor=282828&style=for-the-badge&logo=starship&logoColor=FABD2F" alt="GitHub Stars">
          </a>
-         <a href="https://github.com/MoshPitCodes/devenv.wsl2/">
-            <img src="https://img.shields.io/github/repo-size/MoshPitCodes/devenv.wsl2?color=B16286&labelColor=282828&style=for-the-badge&logo=github&logoColor=B16286" alt="Repository Size">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/">
+            <img src="https://img.shields.io/github/repo-size/MoshPitCodes/moshpitcodes.wsl?color=B16286&labelColor=282828&style=for-the-badge&logo=github&logoColor=B16286" alt="Repository Size">
          </a>
          <a href="https://www.microsoft.com/windows/wsl">
             <img src="https://img.shields.io/badge/WSL2-Windows_11-blue.svg?style=for-the-badge&labelColor=282828&logo=windows&logoColor=458588&color=458588" alt="WSL2 on Windows 11">
          </a>
-         <a href="https://github.com/MoshPitCodes/devenv.wsl2/blob/main/LICENSE">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/blob/main/LICENSE">
             <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=Apache--2.0&colorA=282828&colorB=98971A&logo=apache&logoColor=98971A&" alt="Apache 2.0 License"/>
          </a>
       </div>
@@ -36,17 +36,17 @@
       </div>
       <br>
       <div align="center">
-         <a href="https://github.com/MoshPitCodes/devenv.wsl2/actions/workflows/ansible-lint.yml">
-            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/devenv.wsl2/ansible-lint.yml?branch=main&style=for-the-badge&labelColor=282828&logo=ansible&logoColor=EE0000&label=Ansible%20Lint" alt="Ansible Lint">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/actions/workflows/ansible-lint.yml">
+            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/moshpitcodes.wsl/ansible-lint.yml?branch=main&style=for-the-badge&labelColor=282828&logo=ansible&logoColor=EE0000&label=Ansible%20Lint" alt="Ansible Lint">
          </a>
-         <a href="https://github.com/MoshPitCodes/devenv.wsl2/actions/workflows/powershell-lint.yml">
-            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/devenv.wsl2/powershell-lint.yml?branch=main&style=for-the-badge&labelColor=282828&logo=powershell&logoColor=5391FE&label=PowerShell%20Lint" alt="PowerShell Lint">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/actions/workflows/powershell-lint.yml">
+            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/moshpitcodes.wsl/powershell-lint.yml?branch=main&style=for-the-badge&labelColor=282828&logo=powershell&logoColor=5391FE&label=PowerShell%20Lint" alt="PowerShell Lint">
          </a>
-         <a href="https://github.com/MoshPitCodes/devenv.wsl2/actions/workflows/docs-validation.yml">
-            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/devenv.wsl2/docs-validation.yml?branch=main&style=for-the-badge&labelColor=282828&logo=markdown&logoColor=FFFFFF&label=Docs%20Validation" alt="Docs Validation">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/actions/workflows/docs-validation.yml">
+            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/moshpitcodes.wsl/docs-validation.yml?branch=main&style=for-the-badge&labelColor=282828&logo=markdown&logoColor=FFFFFF&label=Docs%20Validation" alt="Docs Validation">
          </a>
-         <a href="https://github.com/MoshPitCodes/devenv.wsl2/actions/workflows/wsl2-test.yml">
-            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/devenv.wsl2/wsl2-test.yml?branch=main&style=for-the-badge&labelColor=282828&logo=windows&logoColor=458588&label=WSL2%20Tests" alt="WSL2 Integration Tests">
+         <a href="https://github.com/MoshPitCodes/moshpitcodes.wsl/actions/workflows/wsl2-test.yml">
+            <img src="https://img.shields.io/github/actions/workflow/status/MoshPitCodes/moshpitcodes.wsl/wsl2-test.yml?branch=main&style=for-the-badge&labelColor=282828&logo=windows&logoColor=458588&label=WSL2%20Tests" alt="WSL2 Integration Tests">
          </a>
       </div>
       <br>
@@ -63,7 +63,7 @@ with a comprehensive Ubuntu development environment managed by Ansible. This two
 everything from WSL2 installation to a fully configured development workspace with Docker, Kubernetes tools,
 AI tools, and more.
 
-> **Note:** Throughout this documentation, `~/development/devenv.wsl2` is used as an example path.
+> **Note:** Throughout this documentation, `~/development/moshpitcodes.wsl` is used as an example path.
 > You can clone the repository to any location you prefer - just adjust the paths accordingly.
 
 <br/>
@@ -140,8 +140,8 @@ From Windows PowerShell as Administrator:
 ```powershell
 # Clone the repository
 cd C:\Users\YourUsername\Projects  # Replace YourUsername
-git clone <repository-url> devenv.wsl2
-cd devenv.wsl2
+git clone <repository-url> moshpitcodes.wsl
+cd moshpitcodes.wsl
 
 # Step 1: Install WSL2 and Ubuntu
 .\powershell\01-Install-WSL2.ps1
@@ -170,8 +170,8 @@ wsl
 
 # Clone repository
 cd ~/development
-git clone <repository-url> devenv.wsl2
-cd devenv.wsl2/ansible
+git clone <repository-url> moshpitcodes.wsl
+cd moshpitcodes.wsl/ansible
 ```
 
 <br/>
@@ -402,7 +402,7 @@ wsl
 
 ```bash
 # Verify installation
-cd ~/development/devenv.wsl2/ansible
+cd ~/development/moshpitcodes.wsl/ansible
 ./verify-setup.sh
 
 # What it checks:
@@ -421,7 +421,7 @@ cd ~/development/devenv.wsl2/ansible
 Track playbook performance and identify bottlenecks:
 
 ```bash
-cd ~/development/devenv.wsl2/ansible
+cd ~/development/moshpitcodes.wsl/ansible
 
 # Benchmark in check mode (safe, dry-run)
 ./benchmark.sh
@@ -449,7 +449,7 @@ cat ~/.ansible-benchmarks/results-*.txt
 Check for repository updates and new features:
 
 ```bash
-cd ~/development/devenv.wsl2/ansible
+cd ~/development/moshpitcodes.wsl/ansible
 
 # Automatic check (respects 7-day interval)
 ./check-updates.sh
@@ -594,7 +594,7 @@ This project builds upon excellent work from the community:
 
 <br/>
 
-<p align="center"><img src="https://api.star-history.com/svg?repos=MoshPitCodes/devenv.wsl2&type=Timeline&theme=dark" alt="Star History Chart" /></p>
+<p align="center"><img src="https://api.star-history.com/svg?repos=MoshPitCodes/moshpitcodes.wsl&type=Timeline&theme=dark" alt="Star History Chart" /></p>
 
 <br/>
 

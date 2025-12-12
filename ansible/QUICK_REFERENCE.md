@@ -1,11 +1,11 @@
 # Quick Reference - Ansible WSL2 Setup
 
-> **Note:** This guide uses `~/development/devenv.wsl2` as an example path. Adjust to your repository location.
+> **Note:** This guide uses `~/development/moshpitcodes.wsl` as an example path. Adjust to your repository location.
 
 ## Running Playbooks
 
 ```bash
-cd ~/development/devenv.wsl2/ansible
+cd ~/development/moshpitcodes.wsl/ansible
 
 # Run everything
 ansible-playbook -K playbooks/main.yml
@@ -26,7 +26,7 @@ ansible-playbook -K --tags "ssh,gpg" playbooks/main.yml
 
 ## Configuration
 
-Edit: `~/development/devenv.wsl2/ansible/vars/user_environment.yml`
+Edit: `~/development/moshpitcodes.wsl/ansible/vars/user_environment.yml`
 
 ### Key Settings
 
@@ -151,7 +151,7 @@ docker images
 
 ```bash
 # Run verification script
-cd ~/development/devenv.wsl2/ansible
+cd ~/development/moshpitcodes.wsl/ansible
 ./verify-setup.sh
 
 # Check Ansible syntax
